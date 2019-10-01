@@ -41,9 +41,14 @@ var config = {
     }
 };
 
+var Body;
 var ground;
 var playerLeft;
+var playerLeftLeftFoot;
+var playerLeftRightFoot;
+var playerLeftFoot;
 var playerRight;
+var playerRightFoot;
 var ball;
 var cursors;
 var scoreLeft = 0;
@@ -54,6 +59,9 @@ var posts;
 var WKey;
 var AKey;
 var DKey;
+var SpaceKey;
+var EnterKey;
+var test;
 
 var game = new Phaser.Game(config);
 
@@ -69,6 +77,8 @@ function preload ()
 
 function create ()
 {
+    Body = Phaser.Physics.Matter.Matter.Body;
+
     this.add.image(0, 0, 'sky').setOrigin(0,0);
     this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
 
@@ -83,14 +93,21 @@ function create ()
     AKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     DKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
     RKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    SpaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    EnterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     groundCollision = 0x0001;
     playerCollision = 0x0004;
     ballCollision = 0x0008;
-    goalLeftCollision = 0x0010;
-    goalRightCollision = 0x0012;
+    goalLeftCollision = 0x0016;
+    goalRightCollision = 0x0032;
 
+    var playerLeftBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(100, 400, 32, 48, { chamfer: { radius: 10 } });
+    playerLeftLeftFoot = this.matter.add.rectangle(100, 400, 30, 12, { chamfer: { radius: 5 } });
+    playerLeftRightFoot = this.matter.add.rectangle(100, 400, 30, 12, { chamfer: { radius: 5 } });
+    playerLeftFoot = "right";
     playerLeft = this.matter.add.sprite(100, 512, 'player')
+        .setExistingBody(playerLeftBody)
         .setFixedRotation(0)
         .setMass(100)
         .setCollisionCategory(playerCollision)
@@ -98,20 +115,10 @@ function create ()
             groundCollision,
             playerCollision,
             ballCollision
-        ]);
-    var playerLeftFoot = this.matter.add.rectangle(100, 400, 30, 15, {
-            chamfer: {radius: 5}
-        });
-    /*var playerLeftHinge = Phaser.Physics.Matter.Matter.Constraint.create({
-            bodyA: playerLeft,
-            bodyB: playerLeftHinge,
-            pointA: { x: 16, y: -24 },
-            length: 0,
-            stiffness: 1
-        });
-    */
-    this.matter.add.constraint(playerLeft, playerLeftFoot, 0, 1, { pointA: { x: 16, y: 24}, pointB: { x: 0, y: 15}});
-    
+    ]);
+    this.matter.add.constraint(playerLeft, playerLeftLeftFoot, 0, 0.5, { pointA: { x: -16, y: 24 }, pointB: { x: -15, y: 0 }});
+    this.matter.add.constraint(playerLeft, playerLeftRightFoot, 0, 0.5, { pointA: { x: 16, y: 24 }, pointB: { x: -15, y: 0 }});
+
     playerRight = this.matter.add.sprite(700, 512, 'player')    
         .setFixedRotation(0)
         .setMass(100)
@@ -120,7 +127,11 @@ function create ()
             groundCollision,
             playerCollision,
             ballCollision
-        ]);
+    ]);
+    playerRightFoot = this.matter.add.rectangle(100, 400, 30, 12, {
+            chamfer: {radius: 5}
+    });
+    this.matter.add.constraint(playerRight, playerRightFoot, 0, 0.5, { pointA: { x: 16, y: 24 }, pointB: { x: -15, y: 0 }});
 
     this.anims.create({
         key: 'left',
@@ -143,7 +154,7 @@ function create ()
     });
 
     ball = this.matter.add.sprite(400, 400, 'ball')
-        .setMass(0.5)
+        .setMass(5)
         .setCircle(7)
         .setScale(2)
         .setBounce(1)
@@ -152,6 +163,7 @@ function create ()
             groundCollision, 
             playerCollision
         ]);
+    
     
     goalLeft = this.matter.add.rectangle(23, 488, 45, 96, { isSensor: true, isStatic: true });
     this.add.image(0, 440, 'goal').setOrigin(0,0);
@@ -177,15 +189,18 @@ function update ()
 
 function playerRightControls ()
 {
+    Body.setAngularVelocity(playerRightFoot, 0);
+    Body.setAngle(playerRightFoot, Math.PI / 2);
+
     if (cursors.left.isDown)
     {
-        playerRight.setVelocityX(-5);
+        playerRight.setVelocityX(-3);
 
         playerRight.anims.play('left', true);
     }
     else if (cursors.right.isDown)
     {
-        playerRight.setVelocityX(5);
+        playerRight.setVelocityX(3);
 
         playerRight.anims.play('right', true);
     }
@@ -194,6 +209,16 @@ function playerRightControls ()
         playerRight.setVelocityX(0);
 
         playerRight.anims.play('turn');
+    }
+
+    if (EnterKey.isDown)
+    {
+        playerRightFoot.collisionFilter.mask = 0x0008;
+        Body.setAngle(playerRightFoot, 5.49);
+    }
+    else
+    {
+        playerRightFoot.collisionFilter.mask = 0x0001;
     }
 
     this.matterCollision.addOnCollideActive({
@@ -211,16 +236,22 @@ function playerRightControls ()
 
 function playerLeftControls ()
 {
+    Body.setAngularVelocity(playerLeftLeftFoot, 0);
+    Body.setAngle(playerLeftLeftFoot, Math.PI / 2);
+
+    Body.setAngularVelocity(playerLeftRightFoot, 0);
+    Body.setAngle(playerLeftRightFoot, Math.PI / 2);
+
     if (AKey.isDown)
     {
-        playerLeft.setVelocityX(-5);
-
+        playerLeft.setVelocityX(-3);
+        playerLeftFoot = "left";
         playerLeft.anims.play('left', true);
     }
     else if (DKey.isDown)
     {
-        playerLeft.setVelocityX(5);
-
+        playerLeft.setVelocityX(3);
+        playerLeftFoot = "right";
         playerLeft.anims.play('right', true);
     }
     else
@@ -228,6 +259,22 @@ function playerLeftControls ()
         playerLeft.setVelocityX(0);
 
         playerLeft.anims.play('turn');
+    }
+
+    if (SpaceKey.isDown && playerLeftFoot === "right")
+    {
+        playerLeftRightFoot.collisionFilter.mask = 0x0008;
+        Body.setAngle(playerLeftRightFoot, 5.49);
+    }
+    else if (SpaceKey.isDown && playerLeftFoot === "left")
+    {
+        playerLeftLeftFoot.collisionFilter.mask = 0x0008;
+        Body.setAngle(playerLeftLeftFoot, 3.92);
+    }
+    else
+    {
+        playerLeftLeftFoot.collisionFilter.mask = 0x0001;
+        playerLeftRightFoot.collisionFilter.mask = 0x0001;
     }
 
     this.matterCollision.addOnCollideActive({
