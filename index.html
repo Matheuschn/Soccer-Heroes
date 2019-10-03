@@ -72,7 +72,7 @@ function preload ()
     this.load.image('ball', 'assets/ball.png');
     this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
     this.load.image('goal', 'assets/goal.png');
-    this.load.image('post', 'assets/post.png');
+   //this.load.image('post', 'assets/post.png');
 }
 
 function create ()
@@ -171,8 +171,8 @@ function create ()
     goalRight = this.matter.add.rectangle(777, 488, 45, 96, { isSensor: true, isStatic: true });
     this.add.image(800, 440, 'goal').setOrigin(0,0).setScale(-1, 1);
 
-    postLeft = this.matter.add.rectangle(23, 440, 45, 3, { isStatic: true });
-    postRight = this.matter.add.rectangle(777, 440, 45, 3, { isStatic: true });
+   // postLeft = this.matter.add.rectangle(23, 440, 45, 3, { isStatic: true });
+    //postRight = this.matter.add.rectangle(777, 440, 45, 3, { isStatic: true });
 }
 
 function update ()
