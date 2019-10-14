@@ -91,17 +91,15 @@ function create() {
   playerRight = new Player(this, 700, 400, "playerRight");
 
   ball = this.matter.add
-    .sprite(400, 400, "ball")
+    .sprite(400, 522, "ball")
     .setMass(5)
-    .setCircle(7)
-    .setScale(2)
+    .setCircle()
     .setBounce(1)
     .setCollisionCategory(ballCollision)
     .setCollidesWith([groundCollision, playerCollision]);
 
   // Cria a hitbox do gol esquerdo e adiciona uma imagem. É melhor fazer assim
   // do que criar um sprite, por causa da colisão.
-  // *LEMBRAR DE DEFINIR OS GOLS COMO OBJETOS NO PRÓXIMO COMMIT*
   goalLeft = this.matter.add.rectangle(23, 488, 45, 96, {
     isSensor: true,
     isStatic: true
@@ -131,7 +129,7 @@ function update() {
   checkGoal.call(this);
 
   if (RKey.isDown) {
-    resetMatch();
+    resetMatch(0);
   }
 }
 
@@ -145,7 +143,9 @@ function checkGoal() {
       if (ball.x <= 31 && ball.y >= 443) {
         scoreRight++;
         scoreText.setText(scoreLeft + " - " + scoreRight);
-        resetMatch();
+        // O número passado define o lado que a bola vai após o gol. Ela
+        // sempre vai pro lado que leva o gol
+        resetMatch(-3);
       }
     }
   });
@@ -157,17 +157,17 @@ function checkGoal() {
       if (ball.x >= 769 && ball.y >= 443) {
         scoreLeft++;
         scoreText.setText(scoreLeft + " - " + scoreRight);
-        resetMatch();
+        resetMatch(3);
       }
     }
   });
 }
 
-function resetMatch() {
+function resetMatch(ballVelocity) {
   playerLeft.sprite.setPosition(100, 512).setVelocity(0, 0);
   playerRight.sprite.setPosition(700, 512).setVelocity(0, 0);
   ball
-    .setPosition(400, 522)
-    .setVelocity(0, 0)
+    .setPosition(400, 200)
+    .setVelocity(ballVelocity, 0)
     .setRotation(0);
 }
