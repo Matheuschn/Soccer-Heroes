@@ -1,3 +1,4 @@
+// Importando e exportando classes e variáveis necessárias
 import Player from "./player.js";
 
 export { ground };
@@ -6,12 +7,13 @@ export { groundCollision };
 export { playerCollision };
 export { ballCollision };
 
+// Configurando a instância do Phaser
 var config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
   physics: {
-    default: "matter",
+    default: "matter", // Define a engine de física MatterJS
     matter: {
       debug: true
     }
@@ -19,9 +21,9 @@ var config = {
   plugins: {
     scene: [
       {
-        plugin: PhaserMatterCollisionPlugin, // The plugin class
-        key: "matterCollision", // Where to store in Scene.Systems, e.g. scene.sys.matterCollision
-        mapping: "matterCollision" // Where to store in the Scene, e.g. scene.matterCollision
+        plugin: PhaserMatterCollisionPlugin, // Plugin para facilitar as colisões no Matter
+        key: "matterCollision",
+        mapping: "matterCollision"
       }
     ]
   },
@@ -32,6 +34,7 @@ var config = {
   }
 };
 
+// Define um bitfield para os grupos de colisão
 var groundCollision = 0x0001;
 var playerCollision = 0x0004;
 var ballCollision = 0x0008;
@@ -50,6 +53,9 @@ var RKey;
 var game = new Phaser.Game(config);
 
 function preload() {
+  // Carrega as imagens que serão usadas.
+  // A imagem da trave (post) não é carregada pro retângulo permanecer invisível,
+  // o que causa um erro 404 no console. Isso é intencional e não afeta a execução.
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/ground.png");
   this.load.image("ball", "assets/ball.png");
@@ -62,6 +68,7 @@ function preload() {
 }
 
 function create() {
+  // Adiciona o fundo e define o mundo de acordo com a resolução
   this.add.image(0, 0, "sky").setOrigin(0, 0);
   this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
 
@@ -75,10 +82,12 @@ function create() {
     fill: "#000"
   });
 
+  // Define a letra R, usada pra resetar o jogo em caso de bugs
   RKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
+  // Define os dois jogadores como objetos, usando o arquivo player.js,
+  // dessa forma, o código relacionado ao sprite fica todo no outro arquivo
   playerLeft = new Player(this, 100, 400, "playerLeft");
-
   playerRight = new Player(this, 700, 400, "playerRight");
 
   ball = this.matter.add
@@ -90,12 +99,16 @@ function create() {
     .setCollisionCategory(ballCollision)
     .setCollidesWith([groundCollision, playerCollision]);
 
+  // Cria a hitbox do gol esquerdo e adiciona uma imagem. É melhor fazer assim
+  // do que criar um sprite, por causa da colisão.
+  // *LEMBRAR DE DEFINIR OS GOLS COMO OBJETOS NO PRÓXIMO COMMIT*
   goalLeft = this.matter.add.rectangle(23, 488, 45, 96, {
     isSensor: true,
     isStatic: true
   });
   this.add.image(0, 440, "goal").setOrigin(0, 0);
 
+  // Mesma coisa, só que com o gol direito, invertendo a imagem no eixo horizontal.
   goalRight = this.matter.add.rectangle(777, 488, 45, 96, {
     isSensor: true,
     isStatic: true
@@ -105,16 +118,16 @@ function create() {
     .setOrigin(0, 0)
     .setScale(-1, 1);
 
+  // Cria as traves
   this.matter.add.rectangle(23, 440, 45, 3, { isStatic: true });
-  this.matter.add.rectangle(777, 440, 45, 3, {
-    isStatic: true
-  });
+  this.matter.add.rectangle(777, 440, 45, 3, { isStatic: true });
 }
 
 function update() {
   playerRight.update();
   playerLeft.update();
 
+  // Função para verificar se a bola entrou no gol
   checkGoal.call(this);
 
   if (RKey.isDown) {
@@ -123,10 +136,12 @@ function update() {
 }
 
 function checkGoal() {
+  // Evento que verifica a colisão entre o gol esquerdo e a bola
   this.matterCollision.addOnCollideActive({
     objectA: goalLeft,
     objectB: ball,
     callback: () => {
+      // Se a bola tiver passado de certa posição
       if (ball.x <= 31 && ball.y >= 443) {
         scoreRight++;
         scoreText.setText(scoreLeft + " - " + scoreRight);
@@ -134,6 +149,7 @@ function checkGoal() {
       }
     }
   });
+  // Mesmo evento, mas com o gol direito
   this.matterCollision.addOnCollideActive({
     objectA: goalRight,
     objectB: ball,

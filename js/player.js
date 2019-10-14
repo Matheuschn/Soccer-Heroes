@@ -12,9 +12,11 @@ var SpaceKey;
 var EnterKey;
 
 export default class Player {
+  // Cria o objeto Player
   constructor(scene, x, y, name) {
     this.scene = scene;
 
+    // Cria as animações para o movimento do jogador
     const anims = scene.anims;
     anims.create({
       key: "left",
@@ -34,17 +36,20 @@ export default class Player {
       repeat: -1
     });
 
+    // Adiciona o sprite e armazena o nome
     this.sprite = scene.matter.add.sprite(x, y, "player", 0);
     this.sprite.name = name;
 
+    // Variável para verificar o lado que o jogador está virado
     this.sprite.facing = {
       left: false,
       right: false
     };
-
     if (this.sprite.name === "playerLeft") this.sprite.facing.right = true;
     if (this.sprite.name === "playerRight") this.sprite.facing.left = true;
 
+    // Cria o corpo arredondado do jogador. Esse corpo pode ser substituído
+    // por um outro com uma hitbox mais elaborada
     const playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
       x,
       y,
@@ -55,6 +60,7 @@ export default class Player {
       }
     );
 
+    // Cria o pé do joagdor
     this.sprite.foot = {
       left: scene.matter.add.rectangle(x, y, 30, 12, {
         chamfer: { radius: 5 }
@@ -63,10 +69,10 @@ export default class Player {
         chamfer: { radius: 5 }
       })
     };
-
     this.sprite.foot.left.collisionFilter.mask = groundCollision;
     this.sprite.foot.right.collisionFilter.mask = groundCollision;
 
+    // Define algumas configurações do sprite
     this.sprite
       .setExistingBody(playerBody)
       .setMass(100)
@@ -74,6 +80,7 @@ export default class Player {
       .setCollisionCategory(playerCollision)
       .setCollidesWith([groundCollision, playerCollision, ballCollision]);
 
+    // Adiciona um ponto de dobra entre o pé e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
       pointA: { x: -16, y: 24 },
       pointB: { x: -15, y: 0 }
@@ -83,6 +90,7 @@ export default class Player {
       pointB: { x: -15, y: 0 }
     });
 
+    // Define as teclas para o movimento
     cursors = scene.input.keyboard.createCursorKeys();
     WKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     AKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -96,6 +104,8 @@ export default class Player {
   }
 
   update() {
+    // Remove a velocidade angular do pé, fazendo ele ficar parado.
+    // Tentei fazer isso colocando a inércia como infinito, mas dá problema
     Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
       this.sprite.foot.left,
       0
@@ -105,6 +115,7 @@ export default class Player {
       0
     );
 
+    // Define o ângulo do pé, fixando ele pra baixo
     Phaser.Physics.Matter.Matter.Body.setAngle(
       this.sprite.foot.left,
       Math.PI / 2
@@ -114,6 +125,7 @@ export default class Player {
       Math.PI / 2
     );
 
+    // Retira a colisão do pé
     this.sprite.foot.left.collisionFilter.mask = groundCollision;
     this.sprite.foot.right.collisionFilter.mask = groundCollision;
 
@@ -121,6 +133,7 @@ export default class Player {
   }
 
   move() {
+    // Define o que fazer ao pressionar as teclas de movimento
     if (this.sprite.name === "playerRight") {
       if (cursors.left.isDown) {
         this.sprite.setVelocityX(-3);
@@ -143,6 +156,7 @@ export default class Player {
         this.kick();
       }
 
+      // Só deixa o jogador pular caso ele esteja tocando o chão
       this.scene.matterCollision.addOnCollideActive({
         objectA: this.sprite,
         objectB: ground,
@@ -187,6 +201,7 @@ export default class Player {
   }
 
   kick() {
+    // Verfica qual pé do jogador deve levantar para o chute
     if (this.sprite.facing.left) {
       this.sprite.foot.left.collisionFilter.mask = 0x0008;
       Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.left, 3.92);
