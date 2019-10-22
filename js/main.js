@@ -94,7 +94,7 @@ function create() {
     .sprite(400, 522, "ball")
     .setMass(5)
     .setCircle()
-    .setBounce(1)
+    .setBounce(0.9)
     .setCollisionCategory(ballCollision)
     .setCollidesWith([groundCollision, playerCollision]);
 
@@ -117,8 +117,8 @@ function create() {
     .setScale(-1, 1);
 
   // Cria as traves
-  this.matter.add.rectangle(23, 440, 45, 3, { isStatic: true });
-  this.matter.add.rectangle(777, 440, 45, 3, { isStatic: true });
+  this.matter.add.rectangle(23, 442, 45, 3, { isStatic: true });
+  this.matter.add.rectangle(777, 442, 45, 3, { isStatic: true });
 }
 
 function update() {
@@ -139,7 +139,11 @@ function checkGoal() {
     objectA: goalLeft,
     objectB: ball,
     callback: () => {
-      // Se a bola tiver passado de certa posição
+      // Se a bola ficar em cima do gol, rola ela pra baixo
+      if (Math.round(ball.y) === 427) {
+        ball.setAngularVelocity(0.1);
+      }
+      // Se a bola tiver passado de certa posição, conta o gol
       if (ball.x <= 31 && ball.y >= 443) {
         scoreRight++;
         scoreText.setText(scoreLeft + " - " + scoreRight);
@@ -154,6 +158,10 @@ function checkGoal() {
     objectA: goalRight,
     objectB: ball,
     callback: () => {
+      if (Math.round(ball.y) === 427) {
+        ball.setAngularVelocity(-0.1);
+      }
+
       if (ball.x >= 769 && ball.y >= 443) {
         scoreLeft++;
         scoreText.setText(scoreLeft + " - " + scoreRight);
@@ -169,5 +177,6 @@ function resetMatch(ballVelocity) {
   ball
     .setPosition(400, 200)
     .setVelocity(ballVelocity, 0)
+    .setAngularVelocity(0)
     .setRotation(0);
 }
