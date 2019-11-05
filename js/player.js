@@ -50,7 +50,7 @@ export default class Player {
 
     // Cria o corpo arredondado do jogador. Esse corpo pode ser substituído
     // por um outro com uma hitbox mais elaborada
-    const playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
+    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
       x,
       y,
       32,
@@ -74,7 +74,7 @@ export default class Player {
 
     // Define algumas configurações do sprite
     this.sprite
-      .setExistingBody(playerBody)
+      .setExistingBody(this.sprite.playerBody)
       .setMass(100)
       .setFixedRotation(0)
       .setCollisionCategory(playerCollision)
