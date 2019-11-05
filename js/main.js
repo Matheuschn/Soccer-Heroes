@@ -1,39 +1,6 @@
 // Importando e exportando classes e variáveis necessárias
 import Player from "./player.js";
 
-export { ground };
-
-export { groundCollision };
-export { playerCollision };
-export { ballCollision };
-
-// Configurando a instância do Phaser
-var config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  physics: {
-    default: "matter", // Define a engine de física MatterJS
-    matter: {
-      debug: true
-    }
-  },
-  plugins: {
-    scene: [
-      {
-        plugin: PhaserMatterCollisionPlugin, // Plugin para facilitar as colisões no Matter
-        key: "matterCollision",
-        mapping: "matterCollision"
-      }
-    ]
-  },
-  scene: {
-    preload: preload,
-    create: create,
-    update: update
-  }
-};
-
 // Define um bitfield para os grupos de colisão
 var groundCollision = 0x0001;
 var playerCollision = 0x0004;
@@ -50,9 +17,9 @@ var goalRight;
 var scoreText;
 var RKey;
 
-var game = new Phaser.Game(config);
+var MainScene = new Phaser.Scene("MainScene");
 
-function preload() {
+MainScene.preload = function() {
   // Carrega as imagens que serão usadas.
   // A imagem da trave (post) não é carregada pro retângulo permanecer invisível,
   // o que causa um erro 404 no console. Isso é intencional e não afeta a execução.
@@ -65,12 +32,12 @@ function preload() {
   });
   this.load.image("goal", "assets/goal.png");
   this.load.image("post", "assets/post.png");
-}
+};
 
-function create() {
+MainScene.create = function() {
   // Adiciona o fundo e define o mundo de acordo com a resolução
   this.add.image(0, 0, "sky").setOrigin(0, 0);
-  this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+  this.matter.world.setBounds(0, 0, 800, 600);
 
   ground = this.matter.add
     .image(0, 600, "ground")
@@ -119,9 +86,9 @@ function create() {
   // Cria as traves
   this.matter.add.rectangle(23, 442, 45, 3, { isStatic: true });
   this.matter.add.rectangle(777, 442, 45, 3, { isStatic: true });
-}
+};
 
-function update() {
+MainScene.update = function() {
   playerRight.update();
   playerLeft.update();
 
@@ -131,7 +98,9 @@ function update() {
   if (RKey.isDown) {
     resetMatch(0);
   }
-}
+
+  //var x = setInterval(addPowerUp.call(this), 10000);
+};
 
 function checkGoal() {
   // Evento que verifica a colisão entre o gol esquerdo e a bola
@@ -180,3 +149,20 @@ function resetMatch(ballVelocity) {
     .setAngularVelocity(0)
     .setRotation(0);
 }
+
+function addPowerUp() {
+  let minX = 100;
+  let maxX = 700;
+  let minY = 400;
+  let maxY = 350;
+  let randomX = Math.floor(Math.random() * (maxX - minX + 1) + minX);
+  let randomY = Math.floor(Math.random() * (maxY - minY + 1) + minY);
+  var powerUp = this.add.image(randomX, randomY, "ball");
+}
+
+export { MainScene };
+
+export { ground };
+export { groundCollision };
+export { playerCollision };
+export { ballCollision };
