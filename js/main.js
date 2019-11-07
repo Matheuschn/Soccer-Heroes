@@ -39,7 +39,6 @@ mainScene.preload = function() {
     frameHeight: 48
   });
   this.load.image("goal", "assets/goal.png");
-  this.load.image("post", "assets/post.png");
   this.load.spritesheet("fullscreen", "assets/fullscreen.png", {
     frameWidth: 64,
     frameHeight: 64
@@ -81,14 +80,16 @@ mainScene.create = function() {
   // do que criar um sprite, por causa da colisão.
   goal.left = this.matter.add.rectangle(23, 488, 45, 96, {
     isSensor: true,
-    isStatic: true
+    isStatic: true,
+    label: "left"
   });
   this.add.image(0, 440, "goal").setOrigin(0, 0);
 
   // Mesma coisa, só que com o gol direito, invertendo a imagem no eixo horizontal.
   goal.right = this.matter.add.rectangle(777, 488, 45, 96, {
     isSensor: true,
-    isStatic: true
+    isStatic: true,
+    label: "right"
   });
   this.add
     .image(800, 440, "goal")
@@ -105,19 +106,15 @@ mainScene.create = function() {
     .setInteractive();
 
   // Ao clicar no botão de tela cheia
-  fullscreenButton.on(
-    "pointerup",
-    function() {
-      if (this.scale.isFullscreen) {
-        fullscreenButton.setFrame(0);
-        this.scale.stopFullscreen();
-      } else {
-        fullscreenButton.setFrame(1);
-        this.scale.startFullscreen();
-      }
-    },
-    this
-  );
+  fullscreenButton.on("pointerup", () => {
+    if (this.scale.isFullscreen) {
+      fullscreenButton.setFrame(0);
+      this.scale.stopFullscreen();
+    } else {
+      fullscreenButton.setFrame(1);
+      this.scale.startFullscreen();
+    }
+  });
 };
 
 mainScene.update = function() {
@@ -135,38 +132,34 @@ mainScene.update = function() {
 };
 
 function checkGoal() {
-  // Evento que verifica a colisão entre o gol esquerdo e a bola
+  // Evento que verifica a colisão entre os gols e a bola
   this.matterCollision.addOnCollideActive({
-    objectA: goal.left,
-    objectB: ball,
-    callback: () => {
-      // Se a bola ficar em cima do gol, rola ela pra baixo
-      if (Math.round(ball.y) === 427) {
-        ball.setAngularVelocity(0.1);
-      }
-      // Se a bola tiver passado de certa posição, conta o gol
-      if (ball.x <= 31 && ball.y >= 443) {
-        score.right++;
-        score.text.setText(score.left + " - " + score.right);
-        // O número passado define o lado que a bola vai após o gol. Ela
-        // sempre vai pro lado que leva o gol
-        resetMatch(-3);
-      }
-    }
-  });
-  // Mesmo evento, mas com o gol direito
-  this.matterCollision.addOnCollideActive({
-    objectA: goal.right,
-    objectB: ball,
-    callback: () => {
-      if (Math.round(ball.y) === 427) {
-        ball.setAngularVelocity(-0.1);
-      }
-
-      if (ball.x >= 769 && ball.y >= 443) {
-        score.left++;
-        score.text.setText(score.left + " - " + score.right);
-        resetMatch(3);
+    objectA: ball,
+    objectB: [goal.left, goal.right],
+    callback: eventData => {
+      // Caso a bola entre no gol esquerdo
+      if (eventData.bodyB.label === "left") {
+        // Se a bola ficar em cima do gol, rola ela pra baixo
+        if (Math.round(ball.y) === 427) {
+          ball.setAngularVelocity(0.1);
+        }
+        // Se a bola tiver passado de certa posição, conta o gol
+        if (ball.x <= 31 && ball.y >= 443) {
+          score.right++;
+          score.text.setText(score.left + " - " + score.right);
+          // O argumento da função define o lado que a bola vai após o gol
+          resetMatch(-3);
+        }
+      } // Caso a bola entre no gol direito
+      else {
+        if (Math.round(ball.y) === 427) {
+          ball.setAngularVelocity(-0.1);
+        }
+        if (ball.x >= 769 && ball.y >= 443) {
+          score.left++;
+          score.text.setText(score.left + " - " + score.right);
+          resetMatch(3);
+        }
       }
     }
   });
