@@ -1,25 +1,33 @@
-// Importando e exportando classes e variáveis necessárias
+// Importa a classe para criação do jogador
 import Player from "./player.js";
 
-// Define um bitfield para os grupos de colisão
-var groundCollision = 0x0001;
-var playerCollision = 0x0004;
-var ballCollision = 0x0008;
+// Define bitfields para as categorias de colisão
+var collision = {
+  groundCollision: 0x0001,
+  playerCollision: 0x0004,
+  ballCollision: 0x0008
+};
+
+var score = { left: 0, right: 0, text: null };
+var goal = { left: null, right: null };
+var player = { left: null, right: null };
+
+var keys = {
+  W: null,
+  A: null,
+  D: null,
+  R: null,
+  space: null,
+  enter: null
+};
 
 var ground;
-var playerLeft;
-var playerRight;
 var ball;
-var scoreLeft = 0;
-var scoreRight = 0;
-var goalLeft;
-var goalRight;
-var scoreText;
-var RKey;
 
-var MainScene = new Phaser.Scene("MainScene");
+// Cria a cena principal
+var mainScene = new Phaser.Scene("mainScene");
 
-MainScene.preload = function() {
+mainScene.preload = function() {
   // Carrega as imagens que serão usadas.
   // A imagem da trave (post) não é carregada pro retângulo permanecer invisível,
   // o que causa um erro 404 no console. Isso é intencional e não afeta a execução.
@@ -32,9 +40,13 @@ MainScene.preload = function() {
   });
   this.load.image("goal", "assets/goal.png");
   this.load.image("post", "assets/post.png");
+  this.load.spritesheet("fullscreen", "assets/fullscreen.png", {
+    frameWidth: 64,
+    frameHeight: 64
+  });
 };
 
-MainScene.create = function() {
+mainScene.create = function() {
   // Adiciona o fundo e define o mundo de acordo com a resolução
   this.add.image(0, 0, "sky").setOrigin(0, 0);
   this.matter.world.setBounds(0, 0, 800, 600);
@@ -44,37 +56,37 @@ MainScene.create = function() {
     .setScale(4)
     .setStatic(true);
 
-  scoreText = this.add.text(350, 16, "0 - 0", {
+  score.text = this.add.text(350, 16, "0 - 0", {
     fontSize: "32px",
     fill: "#000"
   });
 
   // Define a letra R, usada pra resetar o jogo em caso de bugs
-  RKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+  keys.R = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
   // Define os dois jogadores como objetos, usando o arquivo player.js,
   // dessa forma, o código relacionado ao sprite fica todo no outro arquivo
-  playerLeft = new Player(this, 100, 400, "playerLeft");
-  playerRight = new Player(this, 700, 400, "playerRight");
+  player.left = new Player(this, 100, 400, "playerLeft");
+  player.right = new Player(this, 700, 400, "playerRight");
 
   ball = this.matter.add
     .sprite(400, 522, "ball")
     .setMass(5)
     .setCircle()
     .setBounce(0.9)
-    .setCollisionCategory(ballCollision)
-    .setCollidesWith([groundCollision, playerCollision]);
+    .setCollisionCategory(collision.ballCollision)
+    .setCollidesWith([collision.groundCollision, collision.playerCollision]);
 
   // Cria a hitbox do gol esquerdo e adiciona uma imagem. É melhor fazer assim
   // do que criar um sprite, por causa da colisão.
-  goalLeft = this.matter.add.rectangle(23, 488, 45, 96, {
+  goal.left = this.matter.add.rectangle(23, 488, 45, 96, {
     isSensor: true,
     isStatic: true
   });
   this.add.image(0, 440, "goal").setOrigin(0, 0);
 
   // Mesma coisa, só que com o gol direito, invertendo a imagem no eixo horizontal.
-  goalRight = this.matter.add.rectangle(777, 488, 45, 96, {
+  goal.right = this.matter.add.rectangle(777, 488, 45, 96, {
     isSensor: true,
     isStatic: true
   });
@@ -86,16 +98,36 @@ MainScene.create = function() {
   // Cria as traves
   this.matter.add.rectangle(23, 442, 45, 3, { isStatic: true });
   this.matter.add.rectangle(777, 442, 45, 3, { isStatic: true });
+
+  const fullscreenButton = this.add
+    .image(800 - 16, 16, "fullscreen", 0)
+    .setOrigin(1, 0)
+    .setInteractive();
+
+  // Ao clicar no botão de tela cheia
+  fullscreenButton.on(
+    "pointerup",
+    function() {
+      if (this.scale.isFullscreen) {
+        fullscreenButton.setFrame(0);
+        this.scale.stopFullscreen();
+      } else {
+        fullscreenButton.setFrame(1);
+        this.scale.startFullscreen();
+      }
+    },
+    this
+  );
 };
 
-MainScene.update = function() {
-  playerRight.update();
-  playerLeft.update();
+mainScene.update = function() {
+  player.right.update();
+  player.left.update();
 
   // Função para verificar se a bola entrou no gol
   checkGoal.call(this);
 
-  if (RKey.isDown) {
+  if (keys.R.isDown) {
     resetMatch(0);
   }
 
@@ -105,7 +137,7 @@ MainScene.update = function() {
 function checkGoal() {
   // Evento que verifica a colisão entre o gol esquerdo e a bola
   this.matterCollision.addOnCollideActive({
-    objectA: goalLeft,
+    objectA: goal.left,
     objectB: ball,
     callback: () => {
       // Se a bola ficar em cima do gol, rola ela pra baixo
@@ -114,8 +146,8 @@ function checkGoal() {
       }
       // Se a bola tiver passado de certa posição, conta o gol
       if (ball.x <= 31 && ball.y >= 443) {
-        scoreRight++;
-        scoreText.setText(scoreLeft + " - " + scoreRight);
+        score.right++;
+        score.text.setText(score.left + " - " + score.right);
         // O número passado define o lado que a bola vai após o gol. Ela
         // sempre vai pro lado que leva o gol
         resetMatch(-3);
@@ -124,7 +156,7 @@ function checkGoal() {
   });
   // Mesmo evento, mas com o gol direito
   this.matterCollision.addOnCollideActive({
-    objectA: goalRight,
+    objectA: goal.right,
     objectB: ball,
     callback: () => {
       if (Math.round(ball.y) === 427) {
@@ -132,8 +164,8 @@ function checkGoal() {
       }
 
       if (ball.x >= 769 && ball.y >= 443) {
-        scoreLeft++;
-        scoreText.setText(scoreLeft + " - " + scoreRight);
+        score.left++;
+        score.text.setText(score.left + " - " + score.right);
         resetMatch(3);
       }
     }
@@ -141,8 +173,8 @@ function checkGoal() {
 }
 
 function resetMatch(ballVelocity) {
-  playerLeft.sprite.setPosition(100, 512).setVelocity(0, 0);
-  playerRight.sprite.setPosition(700, 512).setVelocity(0, 0);
+  player.left.sprite.setPosition(100, 512).setVelocity(0, 0);
+  player.right.sprite.setPosition(700, 512).setVelocity(0, 0);
   ball
     .setPosition(400, 200)
     .setVelocity(ballVelocity, 0)
@@ -160,9 +192,6 @@ function addPowerUp() {
   var powerUp = this.add.image(randomX, randomY, "ball");
 }
 
-export { MainScene };
+export { ground, collision, keys };
 
-export { ground };
-export { groundCollision };
-export { playerCollision };
-export { ballCollision };
+export { mainScene };
