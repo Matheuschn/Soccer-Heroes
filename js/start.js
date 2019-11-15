@@ -11,9 +11,9 @@ startScene.preload = function() {
 
 startScene.create = function() {
   // Adiciona uma imagem e espera o clique do usuário
-  const startButton = this.add
-    .image(game.scale.width / 2, game.scale.height / 2, "start")
-    .setInteractive();
+  let halfWidth = game.scale.width / 2;
+  let halfHeight = game.scale.height / 2;
+  let startButton = this.add.image(halfWidth, halfHeight, "start").setInteractive();
   startButton.on("pointerdown", () => this.scene.start(mainScene));
 };
 

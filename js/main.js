@@ -9,17 +9,20 @@ const collision = {
   ballCollision: 0x0008
 };
 
+// Declara alguns objetos
 var score = { left: 0, right: 0, text: null };
 var goal = { left: null, right: null };
 var player = { left: null, right: null };
 var min = { x: 100, y: 450 };
 var max = { x: 700, y: 400 };
-var powerUp;
-var lastTouch;
-
 var keys = { W: null, A: null, D: null, R: null, space: null, enter: null };
 
-var ground;
+// Declara variáveis
+var powerUp;
+var lastTouch;
+var goalHeight, goalWidth;
+var goalHalfHeight, goalHalfWidth;
+var ground, groundLevel;
 var ball;
 
 // Cria a cena principal
@@ -37,18 +40,22 @@ mainScene.preload = function() {
 
 mainScene.create = function() {
   // Adiciona o fundo e define o mundo de acordo com a resolução
+  let skyWidth = this.textures.get("sky").frames.__BASE.width;
+  let skyHeight = this.textures.get("sky").frames.__BASE.height;
   this.add
     .image(0, 0, "sky")
     .setOrigin(0, 0)
-    .setScale(game.scale.width / this.textures.get("sky").frames.__BASE.width, game.scale.height / this.textures.get("sky").frames.__BASE.height);
-
+    .setScale(game.scale.width / skyWidth, game.scale.height / skyHeight);
   this.matter.world.setBounds(0, 0, game.scale.width, game.scale.height);
 
+  // Adiciona o chão
+  let groundHalfWidth = this.textures.get("ground").frames.__BASE.halfWidth;
   ground = this.matter.add
     .image(0, game.scale.height, "ground")
-    .setScale(game.scale.width / this.textures.get("ground").frames.__BASE.halfWidth, 4)
+    .setScale(game.scale.width / groundHalfWidth, 4)
     .setStatic(true);
 
+  // Adiciona o placar
   score.text = this.add.text(game.scale.width / 2 - 48, 16, "0 - 0", { fontSize: "32px", fill: "#000" });
 
   // Define a letra R, usada pra resetar o jogo em caso de bugs
@@ -59,8 +66,11 @@ mainScene.create = function() {
   player.left = new Player(this, 100, game.scale.height - 200, "playerLeft");
   player.right = new Player(this, game.scale.width - 100, game.scale.height - 200, "playerRight");
 
+  // Adiciona a bola
+  let ballHalfWidth = this.textures.get("ball").frames.__BASE.halfWidth;
+  groundLevel = ground.body.bounds.min.y;
   ball = this.matter.add
-    .sprite(game.scale.width / 2, ground.body.bounds.min.y - this.textures.get("ball").frames.__BASE.halfWidth, "ball")
+    .sprite(game.scale.width / 2, groundLevel - ballHalfWidth, "ball")
     .setMass(5)
     .setCircle()
     .setBounce(0.9)
@@ -69,32 +79,37 @@ mainScene.create = function() {
 
   // Cria a hitbox do gol esquerdo e adiciona uma imagem. É melhor fazer assim
   // do que criar um sprite, por causa da colisão.
-  goal.left = this.matter.add.rectangle(this.textures.get("goal").frames.__BASE.halfWidth, ground.body.bounds.min.y - this.textures.get("goal").frames.__BASE.halfHeight, 45, 96, {
+  goalHalfWidth = this.textures.get("goal").frames.__BASE.halfWidth;
+  goalHalfHeight = this.textures.get("goal").frames.__BASE.halfHeight;
+  goalWidth = this.textures.get("goal").frames.__BASE.width;
+  goalHeight = this.textures.get("goal").frames.__BASE.height;
+  goal.left = this.matter.add.rectangle(goalHalfWidth, groundLevel - goalHalfHeight, 45, 96, {
     isSensor: true,
     isStatic: true,
     label: "left"
   });
-  this.add.image(0, goal.left.bounds.min.y, "goal").setOrigin(0, 0);
+  this.add.image(0, groundLevel - goalHeight, "goal").setOrigin(0, 0);
 
   // Mesma coisa, só que com o gol direito, invertendo a imagem no eixo horizontal.
-  goal.right = this.matter.add.rectangle(game.scale.width - this.textures.get("goal").frames.__BASE.halfWidth, ground.body.bounds.min.y - this.textures.get("goal").frames.__BASE.halfHeight, 45, 96, {
+  goal.right = this.matter.add.rectangle(game.scale.width - goalHalfWidth, groundLevel - goalHalfHeight, 45, 96, {
     isSensor: true,
     isStatic: true,
     label: "right"
   });
   this.add
-    .image(game.scale.width, goal.right.bounds.min.y, "goal")
+    .image(game.scale.width, groundLevel - goalHeight, "goal")
     .setOrigin(0, 0)
     .setScale(-1, 1);
 
   // Cria as traves
-  this.matter.add.rectangle(goal.left.position.x, goal.left.vertices[1].y + 2, goal.left.vertices[1].x, 3, {
+  this.matter.add.rectangle(goalHalfWidth, groundLevel - goalHeight + 2, goalWidth, 3, {
     isStatic: true
   });
-  this.matter.add.rectangle(goal.right.position.x, goal.right.vertices[1].y + 2, game.scale.width - goal.right.vertices[0].x, 3, {
+  this.matter.add.rectangle(game.scale.width - goalHalfWidth, groundLevel - goalHeight + 2, goalWidth, 3, {
     isStatic: true
   });
 
+  // Adiciona o botão de tela cheia
   const fullscreenButton = this.add
     .image(game.scale.width - 16, 16, "fullscreen", 0)
     .setOrigin(1, 0)
@@ -136,28 +151,29 @@ function checkGoal() {
     objectA: ball,
     objectB: [goal.left, goal.right],
     callback: eventData => {
+      let ballHalfWidth = ball.width / 2;
       // Caso a bola entre no gol esquerdo
       if (eventData.bodyB.label === "left") {
         // Se a bola ficar em cima do gol, rola ela pra baixo
-        if (Math.round(ball.y) === goal.left.vertices[1].y + 1 - ball.width / 2) {
+        if (Math.round(ball.y) === groundLevel - goalHeight + 1 - ballHalfWidth) {
           ball.setAngularVelocity(0.1);
         }
         // Se a bola tiver passado de certa posição, conta o gol
-        if (ball.x <= goal.left.vertices[1].x - ball.width / 2 && ball.y >= goal.left.vertices[1].y + 3) {
+        if (ball.x <= goalWidth - ballHalfWidth && ball.y >= groundLevel - goalHeight + 3) {
           score.right++;
           score.text.setText(score.left + " - " + score.right);
           // O argumento da função define o lado que a bola vai após o gol
-          resetMatch(-3);
+          resetMatch(-5);
         }
       } // Caso a bola entre no gol direito
       else {
-        if (Math.round(ball.y) === goal.right.vertices[1].y + 1 - ball.width / 2) {
+        if (Math.round(ball.y) === groundLevel - goalHeight + 1 - ballHalfWidth) {
           ball.setAngularVelocity(-0.1);
         }
-        if (ball.x >= goal.right.vertices[0].x + ball.width / 2 && ball.y >= goal.right.vertices[1].y + 3) {
+        if (ball.x >= game.scale.width - goalWidth + ballHalfWidth && ball.y >= groundLevel - goalHeight + 3) {
           score.left++;
           score.text.setText(score.left + " - " + score.right);
-          resetMatch(3);
+          resetMatch(5);
         }
       }
     }
@@ -165,8 +181,10 @@ function checkGoal() {
 }
 
 function resetMatch(ballVelocity) {
-  player.left.sprite.setPosition(100, ground.body.bounds.min.y - player.left.sprite.height / 2).setVelocity(0, 0);
-  player.right.sprite.setPosition(game.scale.width - 100, ground.body.bounds.min.y - player.right.sprite.height / 2).setVelocity(0, 0);
+  // Posiciona os jogadores e a bola em suas posições iniciais
+  let playerHalfHeight = player.left.sprite.height / 2;
+  player.left.sprite.setPosition(100, groundLevel - playerHalfHeight).setVelocity(0, 0);
+  player.right.sprite.setPosition(game.scale.width - 100, groundLevel - playerHalfHeight).setVelocity(0, 0);
   ball
     .setPosition(game.scale.width / 2, game.scale.height / 2)
     .setVelocity(ballVelocity, 0)

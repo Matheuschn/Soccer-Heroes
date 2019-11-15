@@ -3,7 +3,7 @@ import { startScene } from "./start.js";
 import { mainScene } from "./main.js";
 
 // Configurando a instância do Phaser
-const config = {
+let config = {
   type: Phaser.AUTO,
   width: 1366,
   height: 768,
