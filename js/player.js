@@ -42,27 +42,22 @@ export default class Player {
 
     // Cria o corpo arredondado do jogador. Esse corpo pode ser substituído
     // por um outro com uma hitbox mais elaborada
-    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
-      x,
-      y,
-      32,
-      48,
-      {
-        chamfer: { radius: 10 }
-      }
-    );
+    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(x, y, 32, 48, {
+      chamfer: { radius: 10 },
+      label: name
+    });
 
     // Cria o pé do joagdor
     this.sprite.foot = {
       left: scene.matter.add.rectangle(x, y, 30, 12, {
-        chamfer: { radius: 5 }
+        chamfer: { radius: 5 },
+        label: name
       }),
       right: scene.matter.add.rectangle(x, y, 30, 12, {
-        chamfer: { radius: 5 }
+        chamfer: { radius: 5 },
+        label: name
       })
     };
-    this.sprite.foot.left.collisionFilter.mask = collision.groundCollision;
-    this.sprite.foot.right.collisionFilter.mask = collision.groundCollision;
 
     // Define algumas configurações do sprite
     this.sprite
@@ -70,11 +65,7 @@ export default class Player {
       .setMass(100)
       .setFixedRotation(0)
       .setCollisionCategory(collision.playerCollision)
-      .setCollidesWith([
-        collision.groundCollision,
-        collision.playerCollision,
-        collision.ballCollision
-      ]);
+      .setCollidesWith([collision.groundCollision, collision.playerCollision, collision.ballCollision]);
 
     // Adiciona um ponto de dobra entre o pé e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
@@ -91,35 +82,19 @@ export default class Player {
     keys.W = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     keys.A = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     keys.D = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-    keys.space = scene.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
-    );
-    keys.enter = scene.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.ENTER
-    );
+    keys.space = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    keys.enter = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
   }
 
   update() {
     // Remove a velocidade angular do pé, fazendo ele ficar parado.
     // Tentei fazer isso colocando a inércia como infinito, mas dá problema
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
-      this.sprite.foot.left,
-      0
-    );
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
-      this.sprite.foot.right,
-      0
-    );
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.left, 0);
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.right, 0);
 
     // Define o ângulo do pé, fixando ele pra baixo
-    Phaser.Physics.Matter.Matter.Body.setAngle(
-      this.sprite.foot.left,
-      Math.PI / 2
-    );
-    Phaser.Physics.Matter.Matter.Body.setAngle(
-      this.sprite.foot.right,
-      Math.PI / 2
-    );
+    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.left, Math.PI / 2);
+    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.right, Math.PI / 2);
 
     // Retira a colisão do pé
     this.sprite.foot.left.collisionFilter.mask = collision.groundCollision;
