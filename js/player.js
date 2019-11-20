@@ -1,8 +1,3 @@
-// Importa variáveis usadas para a classe do jogador
-import { ground, collision, keys } from "./main.js";
-
-var cursors;
-
 export default class Player {
   // Cria o objeto Player
   constructor(scene, x, y, name) {
@@ -37,6 +32,7 @@ export default class Player {
       left: false,
       right: false
     };
+
     if (this.sprite.name === "playerLeft") this.sprite.facing.right = true;
     if (this.sprite.name === "playerRight") this.sprite.facing.left = true;
 
@@ -64,8 +60,8 @@ export default class Player {
       .setExistingBody(this.sprite.playerBody)
       .setMass(100)
       .setFixedRotation(0)
-      .setCollisionCategory(collision.playerCollision)
-      .setCollidesWith([collision.groundCollision, collision.playerCollision, collision.ballCollision]);
+      .setCollisionCategory(this.scene.collision.playerCollision)
+      .setCollidesWith([this.scene.collision.groundCollision, this.scene.collision.playerCollision, this.scene.collision.ballCollision]);
 
     // Adiciona um ponto de dobra entre o pé e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
@@ -78,12 +74,14 @@ export default class Player {
     });
 
     // Define as teclas para o movimento
-    cursors = scene.input.keyboard.createCursorKeys();
-    keys.W = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-    keys.A = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    keys.D = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-    keys.space = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    keys.enter = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    this.cursors = scene.input.keyboard.createCursorKeys();
+    this.keys = {
+      W: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      A: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      D: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      space: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      enter: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
+    };
   }
 
   update() {
@@ -97,8 +95,8 @@ export default class Player {
     Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.right, Math.PI / 2);
 
     // Retira a colisão do pé
-    this.sprite.foot.left.collisionFilter.mask = collision.groundCollision;
-    this.sprite.foot.right.collisionFilter.mask = collision.groundCollision;
+    this.sprite.foot.left.collisionFilter.mask = this.scene.collision.groundCollision;
+    this.sprite.foot.right.collisionFilter.mask = this.scene.collision.groundCollision;
 
     this.move();
   }
@@ -106,13 +104,13 @@ export default class Player {
   move() {
     // Define o que fazer ao pressionar as teclas de movimento
     if (this.sprite.name === "playerRight") {
-      if (cursors.left.isDown) {
+      if (this.cursors.left.isDown) {
         this.sprite.setVelocityX(-3);
         this.sprite.anims.play("left", true);
 
         this.sprite.facing.left = true;
         this.sprite.facing.right = false;
-      } else if (cursors.right.isDown) {
+      } else if (this.cursors.right.isDown) {
         this.sprite.setVelocityX(3);
         this.sprite.anims.play("right", true);
 
@@ -123,28 +121,28 @@ export default class Player {
         this.sprite.anims.play("turn");
       }
 
-      if (keys.enter.isDown) {
+      if (this.keys.enter.isDown) {
         this.kick();
       }
 
       // Só deixa o jogador pular caso ele esteja tocando o chão
       this.scene.matterCollision.addOnCollideActive({
         objectA: this.sprite,
-        objectB: ground,
+        objectB: this.scene.ground,
         callback: () => {
-          if (cursors.up.isDown) {
+          if (this.cursors.up.isDown) {
             this.sprite.setVelocityY(-7);
           }
         }
       });
     } else if (this.sprite.name === "playerLeft") {
-      if (keys.A.isDown) {
+      if (this.keys.A.isDown) {
         this.sprite.setVelocityX(-3);
         this.sprite.anims.play("left", true);
 
         this.sprite.facing.left = true;
         this.sprite.facing.right = false;
-      } else if (keys.D.isDown) {
+      } else if (this.keys.D.isDown) {
         this.sprite.setVelocityX(3);
         this.sprite.anims.play("right", true);
 
@@ -155,15 +153,15 @@ export default class Player {
         this.sprite.anims.play("turn");
       }
 
-      if (keys.space.isDown) {
+      if (this.keys.space.isDown) {
         this.kick();
       }
 
       this.scene.matterCollision.addOnCollideActive({
         objectA: this.sprite,
-        objectB: ground,
+        objectB: this.scene.ground,
         callback: () => {
-          if (keys.W.isDown) {
+          if (this.keys.W.isDown) {
             this.sprite.setVelocityY(-7);
           }
         }

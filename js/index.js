@@ -1,6 +1,7 @@
 // Importa todas cenas do jogo
 import { startScene } from "./start.js";
-import { mainScene } from "./main.js";
+import { gameScene } from "./main.js";
+import { menuScene } from "./menu.js";
 
 // Configurando a instância do Phaser
 let config = {
@@ -30,10 +31,8 @@ let config = {
       }
     ]
   },
-  scene: [startScene, mainScene]
+  scene: [startScene, menuScene, gameScene]
 };
 
 // Inicia o jogo com as configurações definidas acima
-const game = new Phaser.Game(config);
-
-export { game };
+new Phaser.Game(config);
