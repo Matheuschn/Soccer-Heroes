@@ -1,31 +1,15 @@
 // Importa a classe para criação do jogador e a variável game
 import Player from "./player.js";
-import { game } from "./index.js";
 
-// Define bitfields para as categorias de colisão
-const collision = {
-  groundCollision: 0x0001,
-  playerCollision: 0x0004,
-  ballCollision: 0x0008
+// Cria a cena do jogo
+const gameScene = new Phaser.Scene("gameScene");
+
+gameScene.init = function(data) {
+  this.isTimeGamemode = data.isTimeGamemode;
+  this.isGoalGamemode = data.isGoalGamemode;
 };
 
-var score = { left: 0, right: 0, text: null };
-var goal = { left: null, right: null };
-var player = { left: null, right: null };
-var min = { x: 100, y: 450 };
-var max = { x: 700, y: 400 };
-var powerUp;
-var lastTouch;
-
-var keys = { W: null, A: null, D: null, R: null, space: null, enter: null };
-
-var ground;
-var ball;
-
-// Cria a cena principal
-const mainScene = new Phaser.Scene("mainScene");
-
-mainScene.preload = function() {
+gameScene.preload = function() {
   // Carrega as imagens que serão usadas.
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/ground.png");
@@ -35,68 +19,103 @@ mainScene.preload = function() {
   this.load.spritesheet("fullscreen", "assets/fullscreen.png", { frameWidth: 64, frameHeight: 64 });
 };
 
-mainScene.create = function() {
+gameScene.create = function() {
   // Adiciona o fundo e define o mundo de acordo com a resolução
+  let skyWidth = this.textures.get("sky").frames.__BASE.width;
+  let skyHeight = this.textures.get("sky").frames.__BASE.height;
   this.add
     .image(0, 0, "sky")
     .setOrigin(0, 0)
-    .setScale(game.scale.width / this.textures.get("sky").frames.__BASE.width, game.scale.height / this.textures.get("sky").frames.__BASE.height);
+    .setScale(this.scale.width / skyWidth, this.scale.height / skyHeight);
+  this.matter.world.setBounds(0, 0, this.scale.width, this.scale.height);
 
-  this.matter.world.setBounds(0, 0, game.scale.width, game.scale.height);
-
-  ground = this.matter.add
-    .image(0, game.scale.height, "ground")
-    .setScale(game.scale.width / this.textures.get("ground").frames.__BASE.halfWidth, 4)
+  // Adiciona o chão
+  let groundHalfWidth = this.textures.get("ground").frames.__BASE.halfWidth;
+  this.ground = this.matter.add
+    .image(0, this.scale.height, "ground")
+    .setScale(this.scale.width / groundHalfWidth, 4)
     .setStatic(true);
 
-  score.text = this.add.text(game.scale.width / 2 - 48, 16, "0 - 0", { fontSize: "32px", fill: "#000" });
+  // Adiciona o placar
+  this.score = {
+    left: 0,
+    right: 0,
+    text: this.add.text(this.scale.width / 2 - 48, 16, "0 - 0", { fontSize: "32px", fill: "#000" })
+  };
 
-  // Define a letra R, usada pra resetar o jogo em caso de bugs
-  keys.R = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+  // Adiciona o timer
+  if (this.isTimeGamemode) {
+    this.time = {
+      text: this.add.text(this.scale.width / 2 - 36, 48, "2:00", { fontSize: "32px", fill: "#000" }),
+      event: this.time.addEvent({
+        delay: 120000,
+        callback: endGame,
+        callbackScope: this
+      })
+    };
+  }
+
+  // Define os grupos de colisão
+  this.collision = {
+    groundCollision: 0x0001,
+    playerCollision: 0x0004,
+    ballCollision: 0x0008
+  };
 
   // Define os dois jogadores como objetos, usando o arquivo player.js,
   // dessa forma, o código relacionado ao sprite fica todo no outro arquivo
-  player.left = new Player(this, 100, game.scale.height - 200, "playerLeft");
-  player.right = new Player(this, game.scale.width - 100, game.scale.height - 200, "playerRight");
+  this.player = {
+    left: new Player(this, 100, this.scale.height - 200, "playerLeft"),
+    right: new Player(this, this.scale.width - 100, this.scale.height - 200, "playerRight")
+  };
 
-  ball = this.matter.add
-    .sprite(game.scale.width / 2, ground.body.bounds.min.y - this.textures.get("ball").frames.__BASE.halfWidth, "ball")
+  // Adiciona a bola
+  let ballHalfWidth = this.textures.get("ball").frames.__BASE.halfWidth;
+  this.ground.level = this.ground.body.bounds.min.y;
+  this.ball = this.matter.add
+    .sprite(this.scale.width / 2, this.ground.level - ballHalfWidth, "ball")
     .setMass(5)
     .setCircle()
     .setBounce(0.9)
-    .setCollisionCategory(collision.ballCollision)
-    .setCollidesWith([collision.groundCollision, collision.playerCollision]);
+    .setCollisionCategory(this.collision.ballCollision)
+    .setCollidesWith([this.collision.groundCollision, this.collision.playerCollision]);
 
-  // Cria a hitbox do gol esquerdo e adiciona uma imagem. É melhor fazer assim
+  // Cria as hitboxes dos gols e adiciona as imagens. É melhor fazer assim
   // do que criar um sprite, por causa da colisão.
-  goal.left = this.matter.add.rectangle(this.textures.get("goal").frames.__BASE.halfWidth, ground.body.bounds.min.y - this.textures.get("goal").frames.__BASE.halfHeight, 45, 96, {
-    isSensor: true,
-    isStatic: true,
-    label: "left"
-  });
-  this.add.image(0, goal.left.bounds.min.y, "goal").setOrigin(0, 0);
+  let goalHalfWidth = this.textures.get("goal").frames.__BASE.halfWidth;
+  let goalHalfHeight = this.textures.get("goal").frames.__BASE.halfHeight;
+  this.goal = {
+    width: this.textures.get("goal").frames.__BASE.width,
+    height: this.textures.get("goal").frames.__BASE.height,
+    left: this.matter.add.rectangle(goalHalfWidth, this.ground.level - goalHalfHeight, 45, 96, {
+      isSensor: true,
+      isStatic: true,
+      label: "left"
+    }),
+    right: this.matter.add.rectangle(this.scale.width - goalHalfWidth, this.ground.level - goalHalfHeight, 45, 96, {
+      isSensor: true,
+      isStatic: true,
+      label: "right"
+    })
+  };
 
-  // Mesma coisa, só que com o gol direito, invertendo a imagem no eixo horizontal.
-  goal.right = this.matter.add.rectangle(game.scale.width - this.textures.get("goal").frames.__BASE.halfWidth, ground.body.bounds.min.y - this.textures.get("goal").frames.__BASE.halfHeight, 45, 96, {
-    isSensor: true,
-    isStatic: true,
-    label: "right"
-  });
+  this.add.image(0, this.ground.level - this.goal.height, "goal").setOrigin(0, 0);
   this.add
-    .image(game.scale.width, goal.right.bounds.min.y, "goal")
+    .image(this.scale.width, this.ground.level - this.goal.height, "goal")
     .setOrigin(0, 0)
     .setScale(-1, 1);
 
   // Cria as traves
-  this.matter.add.rectangle(goal.left.position.x, goal.left.vertices[1].y + 2, goal.left.vertices[1].x, 3, {
+  this.matter.add.rectangle(this.goal.width / 2, this.ground.level - this.goal.height + 2, this.goal.width, 3, {
     isStatic: true
   });
-  this.matter.add.rectangle(goal.right.position.x, goal.right.vertices[1].y + 2, game.scale.width - goal.right.vertices[0].x, 3, {
+  this.matter.add.rectangle(this.scale.width - this.goal.width / 2, this.ground.level - this.goal.height + 2, this.goal.width, 3, {
     isStatic: true
   });
 
+  // Adiciona o botão de tela cheia
   const fullscreenButton = this.add
-    .image(game.scale.width - 16, 16, "fullscreen", 0)
+    .image(this.scale.width - 16, 16, "fullscreen", 0)
     .setOrigin(1, 0)
     .setInteractive();
 
@@ -115,82 +134,98 @@ mainScene.create = function() {
   //addPowerUp();
 };
 
-mainScene.update = function() {
-  player.right.update();
-  player.left.update();
+gameScene.update = function() {
+  // Função para atualizar os jogadores
+  this.player.right.update();
+  this.player.left.update();
 
   // Função para verificar se a bola entrou no gol
   checkGoal();
 
+  // Atualiza o tempo
+  if (this.isTimeGamemode) {
+    let timeRemaining = 120 - Math.round(this.time.event.getElapsedSeconds());
+    let minutes = Math.floor(timeRemaining / 60);
+    let seconds = Math.round(timeRemaining % 60);
+    seconds = (seconds < 10 ? "0" : "") + seconds;
+    this.time.text.setText(minutes + ":" + seconds);
+  }
+
   //getLastTouch();
   //getPowerUp();
-
-  if (keys.R.isDown) {
-    resetMatch(0);
-  }
 };
 
 function checkGoal() {
   // Evento que verifica a colisão entre os gols e a bola
-  mainScene.matterCollision.addOnCollideActive({
-    objectA: ball,
-    objectB: [goal.left, goal.right],
+  gameScene.matterCollision.addOnCollideActive({
+    objectA: gameScene.ball,
+    objectB: [gameScene.goal.left, gameScene.goal.right],
     callback: eventData => {
+      let ballHalfWidth = gameScene.ball.width / 2;
       // Caso a bola entre no gol esquerdo
       if (eventData.bodyB.label === "left") {
         // Se a bola ficar em cima do gol, rola ela pra baixo
-        if (Math.round(ball.y) === goal.left.vertices[1].y + 1 - ball.width / 2) {
-          ball.setAngularVelocity(0.1);
+        if (Math.round(gameScene.ball.y) === gameScene.ground.level - gameScene.goal.height + 1 - ballHalfWidth) {
+          gameScene.ball.setAngularVelocity(0.1);
         }
         // Se a bola tiver passado de certa posição, conta o gol
-        if (ball.x <= goal.left.vertices[1].x - ball.width / 2 && ball.y >= goal.left.vertices[1].y + 3) {
-          score.right++;
-          score.text.setText(score.left + " - " + score.right);
+        if (gameScene.ball.x <= gameScene.goal.width - ballHalfWidth && gameScene.ball.y >= gameScene.ground.level - gameScene.goal.height + 3) {
+          gameScene.score.right++;
+          gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
           // O argumento da função define o lado que a bola vai após o gol
-          resetMatch(-3);
+          resetMatch(-5);
         }
       } // Caso a bola entre no gol direito
       else {
-        if (Math.round(ball.y) === goal.right.vertices[1].y + 1 - ball.width / 2) {
-          ball.setAngularVelocity(-0.1);
+        if (Math.round(gameScene.ball.y) === gameScene.ground.level - gameScene.goal.height + 1 - ballHalfWidth) {
+          gameScene.ball.setAngularVelocity(-0.1);
         }
-        if (ball.x >= goal.right.vertices[0].x + ball.width / 2 && ball.y >= goal.right.vertices[1].y + 3) {
-          score.left++;
-          score.text.setText(score.left + " - " + score.right);
-          resetMatch(3);
+        if (gameScene.ball.x >= gameScene.scale.width - gameScene.goal.width + ballHalfWidth && gameScene.ball.y >= gameScene.ground.level - gameScene.goal.height + 3) {
+          gameScene.score.left++;
+          gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
+          resetMatch(5);
         }
       }
     }
   });
+
+  if ((gameScene.score.left >= 10 || gameScene.score.right >= 10) && gameScene.isGoalGamemode) {
+    endGame();
+  }
 }
 
 function resetMatch(ballVelocity) {
-  player.left.sprite.setPosition(100, ground.body.bounds.min.y - player.left.sprite.height / 2).setVelocity(0, 0);
-  player.right.sprite.setPosition(game.scale.width - 100, ground.body.bounds.min.y - player.right.sprite.height / 2).setVelocity(0, 0);
-  ball
-    .setPosition(game.scale.width / 2, game.scale.height / 2)
+  // Posiciona os jogadores e a bola em suas posições iniciais
+  let playerHalfHeight = gameScene.player.left.sprite.height / 2;
+  gameScene.player.left.sprite.setPosition(100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
+  gameScene.player.right.sprite.setPosition(gameScene.scale.width - 100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
+  gameScene.ball
+    .setPosition(gameScene.scale.width / 2, gameScene.scale.height / 2)
     .setVelocity(ballVelocity, 0)
     .setAngularVelocity(0)
     .setRotation(0);
 }
 
+/*
 function addPowerUp() {
   if (powerUp.active) {
     powerUp.destroy();
-    mainScene.time.addEvent({
+    gameScene.time.addEvent({
       delay: 5000,
       callback: addPowerUp,
       callbackScope: this
     });
   } else {
+    let min = { x: 100, y: 450 };
+    let max = { x: 700, y: 400 };
     let randomX = Math.floor(Math.random() * (max.x - min.x + 1) + min.x);
     let randomY = Math.floor(Math.random() * (max.y - min.y + 1) + min.y);
-    powerUp = mainScene.matter.add
+    powerUp = gameScene.matter.add
       .image(randomX, randomY, "ball")
       .setCircle()
       .setIgnoreGravity(true)
       .setSensor(true);
-    mainScene.time.addEvent({
+    gameScene.time.addEvent({
       delay: 15000,
       callback: addPowerUp,
       callbackScope: this
@@ -200,8 +235,8 @@ function addPowerUp() {
 
 function getPowerUp() {
   if (powerUp.active) {
-    mainScene.matterCollision.addOnCollideStart({
-      objectA: ball,
+    gameScene.matterCollision.addOnCollideStart({
+      objectA: gameScene.ball,
       objectB: powerUp,
       callback: () => {
         powerUp.destroy();
@@ -212,15 +247,16 @@ function getPowerUp() {
 }
 
 function getLastTouch() {
-  mainScene.matterCollision.addOnCollideStart({
-    objectA: ball,
+  gameScene.matterCollision.addOnCollideStart({
+    objectA: gameScene.ball,
     objectB: [player.left.sprite, player.right.sprite, player.left.sprite.foot.left, player.left.sprite.foot.right, player.right.sprite.foot.left, player.right.sprite.foot.right],
     callback: eventData => {
       lastTouch = eventData.bodyB.label;
     }
   });
 }
+*/
 
-export { ground, collision, keys };
+function endGame() {}
 
-export { mainScene };
+export { gameScene };
