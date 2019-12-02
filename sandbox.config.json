@@ -1,4 +1,4 @@
 {
-  "template": "static",
+  "template": "node",
   "hardReloadOnChange": true
 }
