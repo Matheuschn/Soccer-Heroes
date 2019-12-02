@@ -1,20 +1,14 @@
 {
-  "name": "soccer-heroes",
-  "version": "1.0.0",
-  "description": "Jogo de futebol feito no Phaser 3 utilizando a engine de física MatterJS.",
-  "main": "index.html",
-  "scripts": {
-    "build": "echo \"no build required\""
+  "author": "Matheus Schneider Camilo",
+  "bugs": {
+    "url": "https://github.com/Matheuschn/Soccer-Heroes/issues"
   },
+  "description": "Jogo de futebol criado no Phaser utilizando a engine de física MatterJS.",
+  "homepage": "https://github.com/Matheuschn/Soccer-Heroes",
+  "main": "index.html",
+  "name": "Soccer-Heroes",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/codesandbox-app/static-template.git"
-  },
-  "keywords": [],
-  "author": "Ives van Hoorne",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/codesandbox-app/static-template/issues"
-  },
-  "homepage": "https://github.com/codesandbox-app/static-template#readme"
+    "url": "git+https://github.com/Matheuschn/Soccer-Heroes.git"
+  }
 }

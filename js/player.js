@@ -12,15 +12,20 @@ export default class Player {
       repeat: -1
     });
     anims.create({
-      key: "turn",
-      frames: [{ key: "player", frame: 4 }],
+      key: "right",
+      frames: anims.generateFrameNumbers("player", { start: 4, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+    anims.create({
+      key: "turnleft",
+      frames: [{ key: "player", frame: 0 }],
       frameRate: 20
     });
     anims.create({
-      key: "right",
-      frames: anims.generateFrameNumbers("player", { start: 5, end: 8 }),
-      frameRate: 10,
-      repeat: -1
+      key: "turnright",
+      frames: [{ key: "player", frame: 4 }],
+      frameRate: 20
     });
 
     // Adiciona o sprite e armazena o nome
@@ -38,10 +43,21 @@ export default class Player {
 
     // Cria o corpo arredondado do jogador. Esse corpo pode ser substituído
     // por um outro com uma hitbox mais elaborada
-    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(x, y, 32, 48, {
-      chamfer: { radius: 10 },
-      label: name
-    });
+    /*
+    let xOffset = 0.1;
+    if (this.sprite.name === "playerRight") xOffset = -0.1;
+    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
+      x,
+      y,
+      36,
+      48,
+      {
+        chamfer: { radius: 10 },
+        label: name,
+        render: { sprite: { xOffset: xOffset, yOffset: 0 }}
+      }
+    );
+    */
 
     // Cria o pé do joagdor
     this.sprite.foot = {
@@ -57,11 +73,15 @@ export default class Player {
 
     // Define algumas configurações do sprite
     this.sprite
-      .setExistingBody(this.sprite.playerBody)
+      //.setExistingBody(this.sprite.playerBody)
       .setMass(100)
       .setFixedRotation(0)
       .setCollisionCategory(this.scene.collision.playerCollision)
-      .setCollidesWith([this.scene.collision.groundCollision, this.scene.collision.playerCollision, this.scene.collision.ballCollision]);
+      .setCollidesWith([
+        this.scene.collision.groundCollision,
+        this.scene.collision.playerCollision,
+        this.scene.collision.ballCollision
+      ]);
 
     // Adiciona um ponto de dobra entre o pé e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
@@ -87,12 +107,24 @@ export default class Player {
   update() {
     // Remove a velocidade angular do pé, fazendo ele ficar parado.
     // Tentei fazer isso colocando a inércia como infinito, mas dá problema
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.left, 0);
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.right, 0);
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
+      this.sprite.foot.left,
+      0
+    );
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
+      this.sprite.foot.right,
+      0
+    );
 
     // Define o ângulo do pé, fixando ele pra baixo
-    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.left, Math.PI / 2);
-    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.right, Math.PI / 2);
+    Phaser.Physics.Matter.Matter.Body.setAngle(
+      this.sprite.foot.left,
+      Math.PI / 2
+    );
+    Phaser.Physics.Matter.Matter.Body.setAngle(
+      this.sprite.foot.right,
+      Math.PI / 2
+    );
 
     // Retira a colisão do pé
     this.sprite.foot.left.collisionFilter.mask = this.scene.collision.groundCollision;
@@ -118,7 +150,11 @@ export default class Player {
         this.sprite.facing.right = true;
       } else {
         this.sprite.setVelocityX(0);
-        this.sprite.anims.play("turn");
+        if (this.sprite.facing.left) {
+          this.sprite.anims.play("turnleft");
+        } else {
+          this.sprite.anims.play("turnright");
+        }
       }
 
       if (this.keys.enter.isDown) {
@@ -150,7 +186,11 @@ export default class Player {
         this.sprite.facing.right = true;
       } else {
         this.sprite.setVelocityX(0);
-        this.sprite.anims.play("turn");
+        if (this.sprite.facing.left) {
+          this.sprite.anims.play("turnleft");
+        } else {
+          this.sprite.anims.play("turnright");
+        }
       }
 
       if (this.keys.space.isDown) {
