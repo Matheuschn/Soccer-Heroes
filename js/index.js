@@ -2,6 +2,7 @@
 import { startScene } from "./start.js";
 import { gameScene } from "./main.js";
 import { menuScene } from "./menu.js";
+import { gameoverScene } from "./gameover.js";
 
 // Configurando a instância do Phaser
 let config = {
@@ -31,7 +32,7 @@ let config = {
       }
     ]
   },
-  scene: [startScene, menuScene, gameScene]
+  scene: [startScene, menuScene, gameScene, gameoverScene]
 };
 
 // Inicia o jogo com as configurações definidas acima
