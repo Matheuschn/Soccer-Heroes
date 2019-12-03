@@ -17,15 +17,20 @@ gameScene.init = function(data) {
 
 gameScene.preload = function() {
   // Carrega as imagens que serão usadas.
+  this.load.audio('musica' , "assets/musica.mp3");
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/ground.png");
   this.load.image("ball", "assets/ball.png");
-  this.load.spritesheet("player", "assets/player.png", { frameWidth: 32, frameHeight: 48 });
+  this.load.image("arquibancada", "assets/arquibancada.png");
+  this.load.spritesheet("player", "assets/player.png", { frameWidth: 51, frameHeight: 48 });
   this.load.image("goal", "assets/goal.png");
   this.load.spritesheet("fullscreen", "assets/fullscreen.png", { frameWidth: 64, frameHeight: 64 });
 };
 
 gameScene.create = function() {
+  // Adiciona música de fundo
+   var music = this.sound.add('musica');
+   music.play();
   // Adiciona o fundo e define o mundo de acordo com a resolução
   let skyWidth = this.textures.get("sky").frames.__BASE.width;
   let skyHeight = this.textures.get("sky").frames.__BASE.height;
@@ -34,7 +39,8 @@ gameScene.create = function() {
     .setOrigin(0, 0)
     .setScale(this.scale.width / skyWidth, this.scale.height / skyHeight);
   this.matter.world.setBounds(0, 0, this.scale.width, this.scale.height);
-
+  // Adiciona a arquibancada
+  this.add.image(995, 387, 'arquibancada').setOrigin(0,0);
   // Adiciona o chão
   let groundHalfWidth = this.textures.get("ground").frames.__BASE.halfWidth;
   this.ground = this.matter.add
