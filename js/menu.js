@@ -6,14 +6,16 @@ const menuScene = new Phaser.Scene("menuScene");
 
 menuScene.preload = function() {
   this.load.image("sky", "assets/sky.png");
+  this.load.image("golbotao", "assets/golbotao.png");
+  this.load.image("tempobotao", "assets/tempobotao.png");
 };
 
 menuScene.create = function() {
   // Adiciona uma imagem e espera o clique do usuário
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
-  let timeButton = this.add.text(halfWidth, halfHeight - 200, "TEMPO", { fontSize: "32px", fill: "#000" }).setInteractive();
-  let scoreButton = this.add.text(halfWidth, halfHeight + 200, "GOLS", { fontSize: "32px", fill: "#000" }).setInteractive();
+  let timeButton = this.add.image(halfWidth, halfHeight - 200, "tempobotao").setInteractive();
+  let scoreButton = this.add.image(halfWidth, halfHeight + 200, "golbotao").setInteractive();
 
   timeButton.on("pointerdown", () => this.scene.start(gameScene, { isTimeGamemode: true, isGoalGamemode: false }));
   scoreButton.on("pointerdown", () => this.scene.start(gameScene, { isTimeGamemode: false, isGoalGamemode: true }));
