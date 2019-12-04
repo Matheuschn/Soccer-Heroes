@@ -267,7 +267,7 @@ function resetMatch(ballVelocity) {
 
 function endGame() {
   gameScene.music.stop();
-  this.scene.start(gameoverScene);
+  gameScene.scene.start(gameoverScene);
 }
 
 export { gameScene };
