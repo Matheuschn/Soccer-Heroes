@@ -35,6 +35,7 @@ gameScene.preload = function() {
     frameHeight: 48
   });
   this.load.image("goal", "assets/goal.png");
+  this.load.image("goalimage", "assets/goalimage.png");
   this.load.spritesheet("fullscreen", "assets/fullscreen.png", {
     frameWidth: 64,
     frameHeight: 64
@@ -171,6 +172,11 @@ gameScene.create = function() {
       this.scale.startFullscreen();
     }
   });
+  
+  // Adiciona a imagem de gol
+  this.goal.image = this.add.image(this.scale.width / 2, this.scale.height / 2, "goalimage")
+    .setVisible(false)
+    .setScale(1.5);
 };
 
 gameScene.update = function() {
@@ -209,9 +215,10 @@ function checkGoal() {
           if (gameScene.isGoal === false) {
             // A variável isGoal é true pra mostrar que ocorreu um gol
             gameScene.isGoal = true;
-            // Adiciona o gol no placar
+            // Adiciona o gol no placar e mostra a imagem do gol
             gameScene.score.right++;
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
+            gameScene.goal.image.setVisible(true);
             // A arquibancada faz a ola e depois de acabar, reseta a partida
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [-5], this);
@@ -227,6 +234,7 @@ function checkGoal() {
             gameScene.isGoal = true;
             gameScene.score.left++;
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
+            gameScene.goal.image.setVisible(true);
 
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [5], this);
@@ -252,7 +260,8 @@ function resetMatch(ballVelocity) {
     .setVelocity(ballVelocity, 0)
     .setAngularVelocity(0)
     .setRotation(0);
-  // Reseta a variável isGoal
+  // Reseta a variável isGoal e remove a imagem da tela
+  gameScene.goal.image.setVisible(false);
   gameScene.isGoal = false;
 }
 
