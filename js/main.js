@@ -1,37 +1,52 @@
-var timer;
-
-
-// Importa a próxima cena e a variável game
+// Importa a próxima cena
 import { gameoverScene } from "./gameover.js";
 
-// Importa a classe para criação do jogador e a variável game
+// Importa a classe para criação do jogador e da arquibancada
 import Player from "./player.js";
+import Arquibancada from "./arquibancada.js";
 
+var timer;
 // Cria a cena do jogo
 const gameScene = new Phaser.Scene("gameScene");
 
+// A função init recebe a informação sobre o modo de jogo
 gameScene.init = function(data) {
   this.isTimeGamemode = data.isTimeGamemode;
   this.isGoalGamemode = data.isGoalGamemode;
 };
 
 gameScene.preload = function() {
-  // Carrega as imagens que serão usadas.
-  this.load.audio('musica' , "assets/musica.mp3");
+  // Carrega as imagens e sons que serão usados.
+  this.load.audio("musica", "assets/musica.mp3");
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/ground.png");
   this.load.image("ball", "assets/ball.png");
-  this.load.image("arquibancada", "assets/arquibancada.png");
-  this.load.spritesheet("nino", "assets/nino.png", { frameWidth: 51, frameHeight: 48 });
-  this.load.spritesheet("preto", "assets/preto.png", { frameWidth: 51, frameHeight: 48 });
+  this.load.spritesheet("arquibancada", "assets/arquibancada.png", {
+    frameWidth: 988,
+    frameHeight: 384
+  });
+  this.load.image("adboard", "assets/adboard.png");
+  this.load.spritesheet("nino", "assets/nino.png", {
+    frameWidth: 51,
+    frameHeight: 48
+  });
+  this.load.spritesheet("preto", "assets/preto.png", {
+    frameWidth: 51,
+    frameHeight: 48
+  });
   this.load.image("goal", "assets/goal.png");
-  this.load.spritesheet("fullscreen", "assets/fullscreen.png", { frameWidth: 64, frameHeight: 64 });
+  this.load.image("goalimage", "assets/goalimage.png");
+  this.load.spritesheet("fullscreen", "assets/fullscreen.png", {
+    frameWidth: 64,
+    frameHeight: 64
+  });
 };
 
 gameScene.create = function() {
   // Adiciona música de fundo
-   var music = this.sound.add('musica');
-   music.play();
+  this.music = this.sound.add("musica");
+  this.music.setLoop(true).play();
+
   // Adiciona o fundo e define o mundo de acordo com a resolução
   let skyWidth = this.textures.get("sky").frames.__BASE.width;
   let skyHeight = this.textures.get("sky").frames.__BASE.height;
@@ -40,28 +55,41 @@ gameScene.create = function() {
     .setOrigin(0, 0)
     .setScale(this.scale.width / skyWidth, this.scale.height / skyHeight);
   this.matter.world.setBounds(0, 0, this.scale.width, this.scale.height);
-  // Adiciona a arquibancada
-  this.add.image(995, 387, 'arquibancada').setOrigin(0,0);
+
   // Adiciona o chão
   let groundHalfWidth = this.textures.get("ground").frames.__BASE.halfWidth;
   this.ground = this.matter.add
     .image(0, this.scale.height, "ground")
     .setScale(this.scale.width / groundHalfWidth, 4)
     .setStatic(true);
+  this.ground.level = this.ground.body.bounds.min.y;
+
+  // Adiciona a publicidade
+  let adHalfHeight = this.textures.get("adboard").frames.__BASE.halfHeight;
+  let adboard = this.add.image(this.scale.width / 2, this.ground.level - adHalfHeight, "adboard");
+
+  // Cria a arquibancada
+  this.arquibancada = new Arquibancada(this, this.scale.width / 2, this.ground.level - adboard.height - 192);
 
   // Adiciona o placar
   this.score = {
     left: 0,
     right: 0,
-    text: this.add.text(this.scale.width / 2 - 48, 16, "0 - 0", { fontSize: "32px", fill: "#000" })
+    text: this.add.text(this.scale.width / 2 - 48, 16, "0 - 0", {
+      fontSize: "32px",
+      fill: "#000"
+    })
   };
 
   // Adiciona o timer
   if (this.isTimeGamemode) {
     timer = {
-      text: this.add.text(this.scale.width / 2 - 36, 48, "2:00", { fontSize: "32px", fill: "#000" }),
+      text: this.add.text(this.scale.width / 2 - 36, 48, "2:00", {
+        fontSize: "32px",
+        fill: "#000"
+      }),
       event: this.time.addEvent({
-        delay: 300,
+        delay: 120000,
         callback: endGame,
         callbackScope: this
       })
@@ -84,7 +112,6 @@ gameScene.create = function() {
 
   // Adiciona a bola
   let ballHalfWidth = this.textures.get("ball").frames.__BASE.halfWidth;
-  this.ground.level = this.ground.body.bounds.min.y;
   this.ball = this.matter.add
     .sprite(this.scale.width / 2, this.ground.level - ballHalfWidth, "ball")
     .setMass(5)
@@ -93,7 +120,7 @@ gameScene.create = function() {
     .setCollisionCategory(this.collision.ballCollision)
     .setCollidesWith([this.collision.groundCollision, this.collision.playerCollision]);
 
-  // Cria as hitboxes dos gols e adiciona as imagens. É melhor fazer assim
+  // Cria as hitboxes dos gols. É melhor fazer assim
   // do que criar um sprite, por causa da colisão.
   let goalHalfWidth = this.textures.get("goal").frames.__BASE.halfWidth;
   let goalHalfHeight = this.textures.get("goal").frames.__BASE.halfHeight;
@@ -111,7 +138,10 @@ gameScene.create = function() {
       label: "right"
     })
   };
+  // Variável que define se ocorreu um gol
+  this.isGoal = false;
 
+  // Adiciona as imagens dos gols
   this.add.image(0, this.ground.level - this.goal.height, "goal").setOrigin(0, 0);
   this.add
     .image(this.scale.width, this.ground.level - this.goal.height, "goal")
@@ -142,9 +172,11 @@ gameScene.create = function() {
       this.scale.startFullscreen();
     }
   });
-
-  //powerUp = this.matter.add.image(0, 0).setIgnoreGravity(true);
-  //addPowerUp();
+  
+  // Adiciona a imagem de gol
+  this.goal.image = this.add.image(this.scale.width / 2, this.scale.height / 2, "goalimage")
+    .setVisible(false)
+    .setScale(1.5);
 };
 
 gameScene.update = function() {
@@ -163,9 +195,6 @@ gameScene.update = function() {
     seconds = (seconds < 10 ? "0" : "") + seconds;
     timer.text.setText(minutes + ":" + seconds);
   }
-
-  //getLastTouch();
-  //getPowerUp();
 };
 
 function checkGoal() {
@@ -183,10 +212,17 @@ function checkGoal() {
         }
         // Se a bola tiver passado de certa posição, conta o gol
         if (gameScene.ball.x <= gameScene.goal.width - ballHalfWidth && gameScene.ball.y >= gameScene.ground.level - gameScene.goal.height + 3) {
-          gameScene.score.right++;
-          gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
-          // O argumento da função define o lado que a bola vai após o gol
-          resetMatch(-5);
+          if (gameScene.isGoal === false) {
+            // A variável isGoal é true pra mostrar que ocorreu um gol
+            gameScene.isGoal = true;
+            // Adiciona o gol no placar e mostra a imagem do gol
+            gameScene.score.right++;
+            gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
+            gameScene.goal.image.setVisible(true);
+            // A arquibancada faz a ola e depois de acabar, reseta a partida
+            gameScene.arquibancada.ola();
+            gameScene.time.delayedCall(1900, resetMatch, [-5], this);
+          }
         }
       } // Caso a bola entre no gol direito
       else {
@@ -194,14 +230,21 @@ function checkGoal() {
           gameScene.ball.setAngularVelocity(-0.1);
         }
         if (gameScene.ball.x >= gameScene.scale.width - gameScene.goal.width + ballHalfWidth && gameScene.ball.y >= gameScene.ground.level - gameScene.goal.height + 3) {
-          gameScene.score.left++;
-          gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
-          resetMatch(5);
+          if (gameScene.isGoal === false) {
+            gameScene.isGoal = true;
+            gameScene.score.left++;
+            gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
+            gameScene.goal.image.setVisible(true);
+
+            gameScene.arquibancada.ola();
+            gameScene.time.delayedCall(1900, resetMatch, [5], this);
+          }
         }
       }
     }
   });
 
+  // Caso o modo de jogo seja de gols, acaba o jogo quando atingir 10
   if ((gameScene.score.left >= 10 || gameScene.score.right >= 10) && gameScene.isGoalGamemode) {
     endGame();
   }
@@ -217,61 +260,14 @@ function resetMatch(ballVelocity) {
     .setVelocity(ballVelocity, 0)
     .setAngularVelocity(0)
     .setRotation(0);
+  // Reseta a variável isGoal e remove a imagem da tela
+  gameScene.goal.image.setVisible(false);
+  gameScene.isGoal = false;
 }
-
-/*
-function addPowerUp() {
-  if (powerUp.active) {
-    powerUp.destroy();
-    gameScene.time.addEvent({
-      delay: 5000,
-      callback: addPowerUp,
-      callbackScope: this
-    });
-  } else {
-    let min = { x: 100, y: 450 };
-    let max = { x: 700, y: 400 };
-    let randomX = Math.floor(Math.random() * (max.x - min.x + 1) + min.x);
-    let randomY = Math.floor(Math.random() * (max.y - min.y + 1) + min.y);
-    powerUp = gameScene.matter.add
-      .image(randomX, randomY, "ball")
-      .setCircle()
-      .setIgnoreGravity(true)
-      .setSensor(true);
-    gameScene.time.addEvent({
-      delay: 15000,
-      callback: addPowerUp,
-      callbackScope: this
-    });
-  }
-}
-
-function getPowerUp() {
-  if (powerUp.active) {
-    gameScene.matterCollision.addOnCollideStart({
-      objectA: gameScene.ball,
-      objectB: powerUp,
-      callback: () => {
-        powerUp.destroy();
-        console.log(lastTouch);
-      }
-    });
-  }
-}
-
-function getLastTouch() {
-  gameScene.matterCollision.addOnCollideStart({
-    objectA: gameScene.ball,
-    objectB: [player.left.sprite, player.right.sprite, player.left.sprite.foot.left, player.left.sprite.foot.right, player.right.sprite.foot.left, player.right.sprite.foot.right],
-    callback: eventData => {
-      lastTouch = eventData.bodyB.label;
-    }
-  });
-}
-*/
 
 function endGame() {
-	this.scene.start(gameoverScene);
+  gameScene.music.stop();
+  this.scene.start(gameoverScene);
 }
 
 export { gameScene };
