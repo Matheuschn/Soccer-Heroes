@@ -3,36 +3,59 @@ export default class Player {
   constructor(scene, x, y, name) {
     this.scene = scene;
 
-    // Cria as animações para o movimento do jogador
+    // Cria as animaÃ§Ãµes para o movimento do jogador
     const anims = scene.anims;
     anims.create({
-      key: "left",
-      frames: anims.generateFrameNumbers("player", { start: 0, end: 3 }),
+      key: "leftnino",
+      frames: anims.generateFrameNumbers("nino", { start: 0, end: 3 }),
       frameRate: 10,
       repeat: -1
     });
     anims.create({
-      key: "right",
-      frames: anims.generateFrameNumbers("player", { start: 4, end: 7 }),
+      key: "rightnino",
+      frames: anims.generateFrameNumbers("nino", { start: 4, end: 7 }),
       frameRate: 10,
       repeat: -1
     });
     anims.create({
-      key: "turnleft",
-      frames: [{ key: "player", frame: 0 }],
+      key: "turnleftnino",
+      frames: [{ key: "nino", frame: 0 }],
       frameRate: 20
     });
     anims.create({
-      key: "turnright",
-      frames: [{ key: "player", frame: 4 }],
+      key: "turnrightnino",
+      frames: [{ key: "nino", frame: 4 }],
+      frameRate: 20
+    });
+
+    anims.create({
+      key: "leftpreto",
+      frames: anims.generateFrameNumbers("preto", { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: -1
+    });
+    anims.create({
+      key: "rightpreto",
+      frames: anims.generateFrameNumbers("preto", { start: 4, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+    anims.create({
+      key: "turnleftpreto",
+      frames: [{ key: "preto", frame: 0 }],
+      frameRate: 20
+    });
+    anims.create({
+      key: "turnrightpreto",
+      frames: [{ key: "preto", frame: 4 }],
       frameRate: 20
     });
 
     // Adiciona o sprite e armazena o nome
-    this.sprite = scene.matter.add.sprite(x, y, "player", 0);
+    this.sprite = scene.matter.add.sprite(x, y, this.spritesheet, 0);
     this.sprite.name = name;
 
-    // Variável para verificar o lado que o jogador está virado
+    // VariÃ¡vel para verificar o lado que o jogador estÃ¡ virado
     this.sprite.facing = {
       left: false,
       right: false
@@ -41,25 +64,20 @@ export default class Player {
     if (this.sprite.name === "playerLeft") this.sprite.facing.right = true;
     if (this.sprite.name === "playerRight") this.sprite.facing.left = true;
 
-    // Cria o corpo arredondado do jogador. Esse corpo pode ser substituído
+    // Cria o corpo arredondado do jogador. Esse corpo pode ser substituÃ­do
     // por um outro com uma hitbox mais elaborada
-    /*
-    let xOffset = 0.1;
-    if (this.sprite.name === "playerRight") xOffset = -0.1;
     this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
       x,
       y,
-      36,
+      30,
       48,
       {
         chamfer: { radius: 10 },
-        label: name,
-        render: { sprite: { xOffset: xOffset, yOffset: 0 }}
+        label: name
       }
     );
-    */
 
-    // Cria o pé do joagdor
+    // Cria o pÃ© do joagdor
     this.sprite.foot = {
       left: scene.matter.add.rectangle(x, y, 30, 12, {
         chamfer: { radius: 5 },
@@ -71,9 +89,9 @@ export default class Player {
       })
     };
 
-    // Define algumas configurações do sprite
+    // Define algumas configuraÃ§Ãµes do sprite
     this.sprite
-      //.setExistingBody(this.sprite.playerBody)
+      .setExistingBody(this.sprite.playerBody)
       .setMass(100)
       .setFixedRotation(0)
       .setCollisionCategory(this.scene.collision.playerCollision)
@@ -83,7 +101,7 @@ export default class Player {
         this.scene.collision.ballCollision
       ]);
 
-    // Adiciona um ponto de dobra entre o pé e o corpo
+    // Adiciona um ponto de dobra entre o pÃ© e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
       pointA: { x: -16, y: 24 },
       pointB: { x: -15, y: 0 }
@@ -105,8 +123,8 @@ export default class Player {
   }
 
   update() {
-    // Remove a velocidade angular do pé, fazendo ele ficar parado.
-    // Tentei fazer isso colocando a inércia como infinito, mas dá problema
+    // Remove a velocidade angular do pÃ©, fazendo ele ficar parado.
+    // Tentei fazer isso colocando a inÃ©rcia como infinito, mas dÃ¡ problema
     Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
       this.sprite.foot.left,
       0
@@ -116,7 +134,7 @@ export default class Player {
       0
     );
 
-    // Define o ângulo do pé, fixando ele pra baixo
+    // Define o Ã¢ngulo do pÃ©, fixando ele pra baixo
     Phaser.Physics.Matter.Matter.Body.setAngle(
       this.sprite.foot.left,
       Math.PI / 2
@@ -126,7 +144,7 @@ export default class Player {
       Math.PI / 2
     );
 
-    // Retira a colisão do pé
+    // Retira a colisÃ£o do pÃ©
     this.sprite.foot.left.collisionFilter.mask = this.scene.collision.groundCollision;
     this.sprite.foot.right.collisionFilter.mask = this.scene.collision.groundCollision;
 
@@ -138,30 +156,31 @@ export default class Player {
     if (this.sprite.name === "playerRight") {
       if (this.cursors.left.isDown) {
         this.sprite.setVelocityX(-3);
-        this.sprite.anims.play("left", true);
+        this.sprite.anims.play("leftpreto", true);
 
         this.sprite.facing.left = true;
         this.sprite.facing.right = false;
       } else if (this.cursors.right.isDown) {
         this.sprite.setVelocityX(3);
-        this.sprite.anims.play("right", true);
+        this.sprite.anims.play("rightpreto", true);
 
         this.sprite.facing.left = false;
         this.sprite.facing.right = true;
       } else {
         this.sprite.setVelocityX(0);
         if (this.sprite.facing.left) {
-          this.sprite.anims.play("turnleft");
+          this.sprite.anims.play("turnleftpreto");
         } else {
-          this.sprite.anims.play("turnright");
+          this.sprite.anims.play("turnrightpreto");
         }
       }
 
-      if (this.keys.enter.isDown) {
-        this.kick();
-      }
+      let scene = this;
+      this.keys.enter.on("down", function(event) {
+        scene.kick();
+      });
 
-      // Só deixa o jogador pular caso ele esteja tocando o chão
+      // SÃ³ deixa o jogador pular caso ele esteja tocando o chÃ£o
       this.scene.matterCollision.addOnCollideActive({
         objectA: this.sprite,
         objectB: this.scene.ground,
@@ -174,28 +193,29 @@ export default class Player {
     } else if (this.sprite.name === "playerLeft") {
       if (this.keys.A.isDown) {
         this.sprite.setVelocityX(-3);
-        this.sprite.anims.play("left", true);
+        this.sprite.anims.play("leftnino", true);
 
         this.sprite.facing.left = true;
         this.sprite.facing.right = false;
       } else if (this.keys.D.isDown) {
         this.sprite.setVelocityX(3);
-        this.sprite.anims.play("right", true);
+        this.sprite.anims.play("rightnino", true);
 
         this.sprite.facing.left = false;
         this.sprite.facing.right = true;
       } else {
         this.sprite.setVelocityX(0);
         if (this.sprite.facing.left) {
-          this.sprite.anims.play("turnleft");
+          this.sprite.anims.play("turnleftnino");
         } else {
-          this.sprite.anims.play("turnright");
+          this.sprite.anims.play("turnrightnino");
         }
       }
 
-      if (this.keys.space.isDown) {
-        this.kick();
-      }
+      let scene = this;
+      this.keys.space.on("down", function(event) {
+        scene.kick();
+      });
 
       this.scene.matterCollision.addOnCollideActive({
         objectA: this.sprite,
@@ -210,7 +230,7 @@ export default class Player {
   }
 
   kick() {
-    // Verfica qual pé do jogador deve levantar para o chute
+    // Verfica qual pÃ© do jogador deve levantar para o chute
     if (this.sprite.facing.left) {
       this.sprite.foot.left.collisionFilter.mask = 0x0008;
       Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.left, 3.92);
