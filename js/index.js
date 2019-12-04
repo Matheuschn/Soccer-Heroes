@@ -13,7 +13,7 @@ let config = {
   physics: {
     default: "matter", // Define a engine de física MatterJS
     matter: {
-      debug: true
+      debug: false
     }
   },
   scale: {

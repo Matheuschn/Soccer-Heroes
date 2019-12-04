@@ -94,6 +94,7 @@ export default class Player {
       .setExistingBody(this.sprite.playerBody)
       .setMass(100)
       .setFixedRotation(0)
+      .setOrigin(0.5, 0.5)
       .setCollisionCategory(this.scene.collision.playerCollision)
       .setCollidesWith([
         this.scene.collision.groundCollision,
