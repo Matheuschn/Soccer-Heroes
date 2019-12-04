@@ -18,6 +18,7 @@ gameScene.init = function(data) {
 gameScene.preload = function() {
   // Carrega as imagens e sons que serão usados.
   this.load.audio("musica", "assets/musica.mp3");
+  this.load.audio("whistle", "assets/whistle.mp3");
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/ground.png");
   this.load.image("ball", "assets/ball.png");
@@ -215,10 +216,11 @@ function checkGoal() {
           if (gameScene.isGoal === false) {
             // A variável isGoal é true pra mostrar que ocorreu um gol
             gameScene.isGoal = true;
-            // Adiciona o gol no placar e mostra a imagem do gol
+            // Adiciona o gol no placar, mostra a imagem do gol e toca o apito
             gameScene.score.right++;
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
             gameScene.goal.image.setVisible(true);
+            gameScene.sound.add("whistle").play();
             // A arquibancada faz a ola e depois de acabar, reseta a partida
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [-5], this);
@@ -235,6 +237,7 @@ function checkGoal() {
             gameScene.score.left++;
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
             gameScene.goal.image.setVisible(true);
+            gameScene.sound.add("whistle").play();
 
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [5], this);
@@ -266,8 +269,20 @@ function resetMatch(ballVelocity) {
 }
 
 function endGame() {
+  // Quando acabar o jogo, parar a música, apitar duas vezes e passar pra próxima cena
   gameScene.music.stop();
-  gameScene.scene.start(gameoverScene);
+  gameScene.sound.add("whistle").play();
+  gameScene.time.delayedCall(1000, () => {
+    gameScene.sound.add("whistle").play();
+  }, this);
+
+  // Ao definar o gol como true, para o jogo
+  gameScene.isGoal = true;
+
+  // Após 3 segundos, mostra a cena de gameOver
+  gameScene.time.delayedCall(3000, () => {
+    gameScene.scene.start(gameoverScene);
+  }, this);
 }
 
 export { gameScene };
