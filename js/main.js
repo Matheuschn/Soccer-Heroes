@@ -22,7 +22,8 @@ gameScene.preload = function() {
   this.load.image("ground", "assets/ground.png");
   this.load.image("ball", "assets/ball.png");
   this.load.image("arquibancada", "assets/arquibancada.png");
-  this.load.spritesheet("player", "assets/player.png", { frameWidth: 51, frameHeight: 48 });
+  this.load.spritesheet("nino", "assets/nino.png", { frameWidth: 51, frameHeight: 48 });
+  this.load.spritesheet("preto", "assets/preto.png", { frameWidth: 51, frameHeight: 48 });
   this.load.image("goal", "assets/goal.png");
   this.load.spritesheet("fullscreen", "assets/fullscreen.png", { frameWidth: 64, frameHeight: 64 });
 };
