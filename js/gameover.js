@@ -5,7 +5,7 @@ import { menuScene } from "./menu.js";
 const gameoverScene = new Phaser.Scene("gameoverScene");
 
 gameoverScene.preload = function() {
-  this.load.image("sky", "assets/sky.png");
+  this.load.image("sky", "assets/images/sky.png");
 };
 
 gameoverScene.create = function() {
@@ -16,7 +16,7 @@ gameoverScene.create = function() {
     .image(0, 0, "sky")
     .setOrigin(0, 0)
     .setScale(this.scale.width / skyWidth, this.scale.height / skyHeight);
-  
+
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
   let startButton = this.add.image(halfWidth, halfHeight, "start").setInteractive();
