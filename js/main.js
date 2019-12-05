@@ -80,21 +80,25 @@ gameScene.create = function() {
   this.score = {
     left: 0,
     right: 0,
-    text: this.add.text(this.scale.width / 2 - 48, 16, "0 - 0", {
-      fontSize: "32px",
-      fill: "#000"
-    })
+    text: this.add
+      .text(this.scale.width / 2, 32, "0 - 0", {
+        fontSize: "32px",
+        fill: "#000"
+      })
+      .setOrigin(0.5)
   };
 
   // Adiciona o timer
   if (this.isTimeGamemode) {
     timer = {
-      text: this.add.text(this.scale.width / 2 - 36, 48, "2:00", {
-        fontSize: "32px",
-        fill: "#000"
-      }),
+      text: this.add
+        .text(this.scale.width / 2, 64, "2:00", {
+          fontSize: "32px",
+          fill: "#000"
+        })
+        .setOrigin(0.5),
       event: this.time.addEvent({
-        delay: 120000,
+        delay: 3000,
         callback: endGame,
         callbackScope: this
       })
@@ -287,7 +291,7 @@ function endGame() {
   gameScene.isGoal = true;
 
   // Após 3 segundos, mostra a cena de gameOver
-  gameScene.time.delayedCall(3000, () => gameScene.scene.start(gameoverScene), this);
+  gameScene.time.delayedCall(3000, () => gameScene.scene.start(gameoverScene, { scoreLeft: gameScene.score.left, scoreRight: gameScene.score.right }), this);
 }
 
 export { gameScene };

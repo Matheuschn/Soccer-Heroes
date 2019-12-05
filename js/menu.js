@@ -5,7 +5,6 @@ import { gameScene } from "./main.js";
 const menuScene = new Phaser.Scene("menuScene");
 
 menuScene.preload = function() {
-  this.load.image("sky", "assets/images/sky.png");
   this.load.image("golbotao", "assets/images/golbotao.png");
   this.load.image("tempobotao", "assets/images/tempobotao.png");
 };
