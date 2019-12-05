@@ -66,16 +66,10 @@ export default class Player {
 
     // Cria o corpo arredondado do jogador. Esse corpo pode ser substituÃ­do
     // por um outro com uma hitbox mais elaborada
-    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(
-      x,
-      y,
-      30,
-      48,
-      {
-        chamfer: { radius: 10 },
-        label: name
-      }
-    );
+    this.sprite.playerBody = Phaser.Physics.Matter.Matter.Bodies.rectangle(x, y, 30, 48, {
+      chamfer: { radius: 10 },
+      label: name
+    });
 
     // Cria o pÃ© do joagdor
     this.sprite.foot = {
@@ -96,19 +90,15 @@ export default class Player {
       .setFixedRotation(0)
       .setOrigin(0.5, 0.5)
       .setCollisionCategory(this.scene.collision.playerCollision)
-      .setCollidesWith([
-        this.scene.collision.groundCollision,
-        this.scene.collision.playerCollision,
-        this.scene.collision.ballCollision
-      ]);
+      .setCollidesWith([this.scene.collision.groundCollision, this.scene.collision.playerCollision, this.scene.collision.ballCollision]);
 
     // Adiciona um ponto de dobra entre o pÃ© e o corpo
     scene.matter.add.constraint(this.sprite, this.sprite.foot.left, 0, 0.5, {
-      pointA: { x: -16, y: 24 },
+      pointA: { x: -12, y: 24 },
       pointB: { x: -15, y: 0 }
     });
     scene.matter.add.constraint(this.sprite, this.sprite.foot.right, 0, 0.5, {
-      pointA: { x: 16, y: 24 },
+      pointA: { x: 12, y: 24 },
       pointB: { x: -15, y: 0 }
     });
 
@@ -126,24 +116,12 @@ export default class Player {
   update() {
     // Remove a velocidade angular do pÃ©, fazendo ele ficar parado.
     // Tentei fazer isso colocando a inÃ©rcia como infinito, mas dÃ¡ problema
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
-      this.sprite.foot.left,
-      0
-    );
-    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(
-      this.sprite.foot.right,
-      0
-    );
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.left, 0);
+    Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.sprite.foot.right, 0);
 
     // Define o Ã¢ngulo do pÃ©, fixando ele pra baixo
-    Phaser.Physics.Matter.Matter.Body.setAngle(
-      this.sprite.foot.left,
-      Math.PI / 2
-    );
-    Phaser.Physics.Matter.Matter.Body.setAngle(
-      this.sprite.foot.right,
-      Math.PI / 2
-    );
+    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.left, Math.PI / 2);
+    Phaser.Physics.Matter.Matter.Body.setAngle(this.sprite.foot.right, Math.PI / 2);
 
     // Retira a colisÃ£o do pÃ©
     this.sprite.foot.left.collisionFilter.mask = this.scene.collision.groundCollision;

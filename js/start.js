@@ -5,7 +5,7 @@ import { menuScene } from "./menu.js";
 const startScene = new Phaser.Scene("startScene");
 
 startScene.preload = function() {
-  this.load.image("start", "assets/start.png");
+  this.load.image("start", "assets/images/start.png");
 };
 
 startScene.create = function() {

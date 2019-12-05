@@ -17,27 +17,31 @@ gameScene.init = function(data) {
 
 gameScene.preload = function() {
   // Carrega as imagens e sons que serão usados.
-  this.load.audio("musica", "assets/musica.mp3");
-  this.load.audio("whistle", "assets/whistle.mp3");
-  this.load.image("sky", "assets/sky.png");
-  this.load.image("ground", "assets/ground.png");
-  this.load.image("ball", "assets/ball.png");
-  this.load.spritesheet("arquibancada", "assets/arquibancada.png", {
+  this.load.audio("musica", "assets/sounds/musica.mp3");
+  this.load.audio("whistle", "assets/sounds/whistle.mp3");
+  this.load.audio("goalsound", "assets/sounds/goalsound.mp3");
+  this.load.audio("over", "assets/sounds/over.mp3");
+
+  this.load.image("sky", "assets/images/sky.png");
+  this.load.image("ground", "assets/images/ground.png");
+  this.load.image("ball", "assets/images/ball.png");
+  this.load.image("adboard", "assets/images/adboard.png");
+  this.load.image("goal", "assets/images/goal.png");
+  this.load.image("goalimage", "assets/images/goalimage.png");
+
+  this.load.spritesheet("arquibancada", "assets/sprites/arquibancada.png", {
     frameWidth: 988,
     frameHeight: 384
   });
-  this.load.image("adboard", "assets/adboard.png");
-  this.load.spritesheet("nino", "assets/nino.png", {
+  this.load.spritesheet("nino", "assets/sprites/nino.png", {
     frameWidth: 51,
     frameHeight: 48
   });
-  this.load.spritesheet("preto", "assets/preto.png", {
+  this.load.spritesheet("preto", "assets/sprites/preto.png", {
     frameWidth: 51,
     frameHeight: 48
   });
-  this.load.image("goal", "assets/goal.png");
-  this.load.image("goalimage", "assets/goalimage.png");
-  this.load.spritesheet("fullscreen", "assets/fullscreen.png", {
+  this.load.spritesheet("fullscreen", "assets/sprites/fullscreen.png", {
     frameWidth: 64,
     frameHeight: 64
   });
@@ -173,9 +177,10 @@ gameScene.create = function() {
       this.scale.startFullscreen();
     }
   });
-  
+
   // Adiciona a imagem de gol
-  this.goal.image = this.add.image(this.scale.width / 2, this.scale.height / 2, "goalimage")
+  this.goal.image = this.add
+    .image(this.scale.width / 2, this.scale.height / 2, "goalimage")
     .setVisible(false)
     .setScale(1.5);
 };
@@ -221,6 +226,7 @@ function checkGoal() {
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
             gameScene.goal.image.setVisible(true);
             gameScene.sound.add("whistle").play();
+            gameScene.sound.add("goalsound").play();
             // A arquibancada faz a ola e depois de acabar, reseta a partida
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [-5], this);
@@ -238,6 +244,7 @@ function checkGoal() {
             gameScene.score.text.setText(gameScene.score.left + " - " + gameScene.score.right);
             gameScene.goal.image.setVisible(true);
             gameScene.sound.add("whistle").play();
+            gameScene.sound.add("goalsound").play();
 
             gameScene.arquibancada.ola();
             gameScene.time.delayedCall(1900, resetMatch, [5], this);
@@ -246,43 +253,41 @@ function checkGoal() {
       }
     }
   });
-
-  // Caso o modo de jogo seja de gols, acaba o jogo quando atingir 10
-  if ((gameScene.score.left >= 10 || gameScene.score.right >= 10) && gameScene.isGoalGamemode) {
-    endGame();
-  }
 }
 
 function resetMatch(ballVelocity) {
-  // Posiciona os jogadores e a bola em suas posições iniciais
-  let playerHalfHeight = gameScene.player.left.sprite.height / 2;
-  gameScene.player.left.sprite.setPosition(100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
-  gameScene.player.right.sprite.setPosition(gameScene.scale.width - 100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
-  gameScene.ball
-    .setPosition(gameScene.scale.width / 2, gameScene.scale.height / 2)
-    .setVelocity(ballVelocity, 0)
-    .setAngularVelocity(0)
-    .setRotation(0);
-  // Reseta a variável isGoal e remove a imagem da tela
-  gameScene.goal.image.setVisible(false);
-  gameScene.isGoal = false;
+  // Caso o modo de jogo seja de gols, acaba o jogo quando atingir 10
+  if ((gameScene.score.left >= 10 || gameScene.score.right >= 10) && gameScene.isGoalGamemode) {
+    gameScene.goal.image.setVisible(false);
+    endGame();
+  } else {
+    // Posiciona os jogadores e a bola em suas posições iniciais
+    let playerHalfHeight = gameScene.player.left.sprite.height / 2;
+    gameScene.player.left.sprite.setPosition(100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
+    gameScene.player.right.sprite.setPosition(gameScene.scale.width - 100, gameScene.ground.level - playerHalfHeight).setVelocity(0, 0);
+    gameScene.ball
+      .setPosition(gameScene.scale.width / 2, gameScene.scale.height / 2)
+      .setVelocity(ballVelocity, 0)
+      .setAngularVelocity(0)
+      .setRotation(0);
+    // Reseta a variável isGoal e remove a imagem da tela
+    gameScene.goal.image.setVisible(false);
+    gameScene.isGoal = false;
+  }
 }
 
 function endGame() {
-  // Quando acabar o jogo, parar a música, apitar duas vezes e passar pra próxima cena
+  // Quando acabar o jogo, parar a música e apitar duas vezes
   gameScene.music.stop();
+  gameScene.sound.add("over").play();
   gameScene.sound.add("whistle").play();
-  gameScene.time.delayedCall(1000, () => {
-    gameScene.sound.add("whistle").play();
-  }, this);
+  gameScene.time.delayedCall(1000, () => gameScene.sound.add("whistle").play(), this);
 
   // Ao definar o gol como true, para o jogo
   gameScene.isGoal = true;
 
   // Após 3 segundos, mostra a cena de gameOver
-  gameScene.time.delayedCall(3000, () => {
-    gameScene.scene.start(gameoverScene);
-  }, this);
+  gameScene.time.delayedCall(3000, () => gameScene.scene.start(gameoverScene), this);
 }
 
 export { gameScene };
