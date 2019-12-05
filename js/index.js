@@ -6,7 +6,7 @@ import { gameoverScene } from "./gameover.js";
 
 // Configurando a instância do Phaser
 let config = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   width: 1366,
   height: 768,
   backgroundColor: "#f3cca3",
