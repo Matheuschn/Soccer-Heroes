@@ -13,8 +13,9 @@ menuScene.create = function() {
   // Adiciona uma imagem e espera o clique do usuário
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
-  let timeButton = this.add.image(halfWidth, halfHeight - 200, "tempobotao").setInteractive();
-  let scoreButton = this.add.image(halfWidth, halfHeight + 200, "golbotao").setInteractive();
+  let logoImg = this.add.image(halfWidth, halfHeight - 200, "logo");
+  let timeButton = this.add.image(halfWidth, halfHeight + 50, "tempobotao").setInteractive().setScale(0.8);
+  let scoreButton = this.add.image(halfWidth, halfHeight + 200, "golbotao").setInteractive().setScale(0.8);
 
   timeButton.on("pointerdown", () => this.scene.start(gameScene, { isTimeGamemode: true, isGoalGamemode: false }));
   scoreButton.on("pointerdown", () => this.scene.start(gameScene, { isTimeGamemode: false, isGoalGamemode: true }));

@@ -98,7 +98,7 @@ gameScene.create = function() {
         })
         .setOrigin(0.5),
       event: this.time.addEvent({
-        delay: 3000,
+        delay: 120000,
         callback: endGame,
         callbackScope: this
       })
