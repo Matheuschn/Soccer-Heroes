@@ -10,15 +10,18 @@ gameoverScene.init = function(data) {
   this.scoreRight = data.scoreRight;
 };
 
+gameoverScene.preload = function() {
+  this.load.image("continue", "assets/images/continuebutton.png");
+  this.load.image("placar", "assets/images/placar.png");
+
+};
+
 gameoverScene.create = function() {
   // Adiciona o texto e espera o clique do usuário
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
 
-  this.add
-    .text(halfWidth, halfHeight - 50, "Placar final:", {
-      fontSize: "32px",
-      fill: "#000"
+  this.add.image(halfWidth, halfHeight - 100, "placar", {
     })
     .setOrigin(0.5);
   this.add
@@ -28,13 +31,8 @@ gameoverScene.create = function() {
     })
     .setOrigin(0.5);
 
-  let continueButton = this.add
-    .text(halfWidth, halfHeight + 300, "Continuar", {
-      fontSize: "32px",
-      fill: "#000"
-    })
-    .setOrigin(0.5)
-    .setInteractive();
+  let continueButton = this.add.image(halfWidth, halfHeight + 150, "continue", {
+    }).setInteractive().setScale(0.8);
   continueButton.on("pointerdown", () => this.scene.start(menuScene));
 };
 
