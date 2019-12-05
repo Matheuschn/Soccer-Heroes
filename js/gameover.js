@@ -4,23 +4,38 @@ import { menuScene } from "./menu.js";
 // Cria a cena de início
 const gameoverScene = new Phaser.Scene("gameoverScene");
 
-gameoverScene.preload = function() {
-  this.load.image("sky", "assets/images/sky.png");
+// A função init recebe a informação sobre o modo de jogo
+gameoverScene.init = function(data) {
+  this.scoreLeft = data.scoreLeft;
+  this.scoreRight = data.scoreRight;
 };
 
 gameoverScene.create = function() {
-  // Adiciona uma imagem e espera o clique do usuário
-  let skyWidth = this.textures.get("sky").frames.__BASE.width;
-  let skyHeight = this.textures.get("sky").frames.__BASE.height;
-  this.add
-    .image(0, 0, "sky")
-    .setOrigin(0, 0)
-    .setScale(this.scale.width / skyWidth, this.scale.height / skyHeight);
-
+  // Adiciona o texto e espera o clique do usuário
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
-  let startButton = this.add.image(halfWidth, halfHeight, "start").setInteractive();
-  startButton.on("pointerdown", () => this.scene.start(menuScene));
+
+  this.add
+    .text(halfWidth, halfHeight - 50, "Placar final:", {
+      fontSize: "32px",
+      fill: "#000"
+    })
+    .setOrigin(0.5);
+  this.add
+    .text(halfWidth, halfHeight, this.scoreLeft + " - " + this.scoreRight, {
+      fontSize: "32px",
+      fill: "#000"
+    })
+    .setOrigin(0.5);
+
+  let continueButton = this.add
+    .text(halfWidth, halfHeight + 300, "Continuar", {
+      fontSize: "32px",
+      fill: "#000"
+    })
+    .setOrigin(0.5)
+    .setInteractive();
+  continueButton.on("pointerdown", () => this.scene.start(menuScene));
 };
 
 // Exporta a cena
