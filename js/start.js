@@ -6,13 +6,15 @@ const startScene = new Phaser.Scene("startScene");
 
 startScene.preload = function() {
   this.load.image("start", "assets/images/start.png");
+  this.load.image("logo", "assets/images/logo.png");
 };
 
 startScene.create = function() {
   // Adiciona uma imagem e espera o clique do usuário
   let halfWidth = this.scale.width / 2;
   let halfHeight = this.scale.height / 2;
-  let startButton = this.add.image(halfWidth, halfHeight, "start").setInteractive();
+  let logoImg = this.add.image(halfWidth, halfHeight - 200, "logo");
+  let startButton = this.add.image(halfWidth, halfHeight + 50, "start").setInteractive();
   startButton.on("pointerdown", () => this.scene.start(menuScene));
 };
 
